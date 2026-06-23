@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ouvidoria Akad — Painel</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --navy:#18233F; --mag:#E6005A; --mag2:#F4A6C4; --mag3:#fbe0eb;
+    --ink:#2b3553; --muted:#6b7088; --muted2:#8089a0;
+    --line:#dce2ee; --bg:#EAEEF6; --card:#ffffff;
+    --gray:#9aa0b0; --grayL:#eef1f7;
+    --ok:#1d9e75; --warn:#d8941f;
+  }
+  html,body{background:var(--bg);color:var(--navy);font-family:"Segoe UI",-apple-system,Roboto,Arial,sans-serif;font-size:14px;line-height:1.5}
+  .app{max-width:1240px;margin:0 auto;padding:14px 16px 40px}
+  a{color:inherit}
+  /* header */
+  .top{display:flex;align-items:center;gap:12px;padding:4px 2px 12px}
+  .logo{background:var(--mag);color:#fff;font-weight:700;font-size:15px;letter-spacing:.06em;padding:6px 12px;border-radius:7px}
+  .top h1{font-size:18px;font-weight:600;color:var(--navy)}
+  .top .sub{font-size:12px;color:var(--muted2)}
+  .period{margin-left:auto;font-size:12px;color:var(--navy);background:#fff;border:1px solid var(--line);padding:6px 12px;border-radius:20px;display:flex;align-items:center;gap:6px}
+  /* filters */
+  .filters{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+  .fg{display:flex;flex-direction:column;gap:4px}
+  .fg label{font-size:11px;color:var(--muted2);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .fg select{appearance:none;border:1px solid var(--line);background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2318233F' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>") no-repeat right 10px center;padding:8px 30px 8px 12px;border-radius:8px;font-size:13px;color:var(--navy);cursor:pointer;min-width:150px}
+  .fg select:hover{border-color:var(--mag2)}
+  .btn-reset{border:1px solid var(--line);background:#fff;color:var(--navy);padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px}
+  .btn-reset:hover{background:var(--mag3);border-color:var(--mag2)}
+  .fg-range{min-width:240px}
+  .fg-range label{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  #rangeLabel{font-weight:700;color:var(--mag);text-transform:none;letter-spacing:0}
+  .range-wrap{position:relative;height:30px;display:flex;align-items:center}
+  .range-track{position:absolute;left:9px;right:9px;height:5px;background:#e3e8f2;border-radius:4px}
+  .range-fill{position:absolute;height:5px;background:var(--mag);border-radius:4px}
+  .range-wrap input[type=range]{position:absolute;left:0;width:100%;margin:0;background:none;pointer-events:none;-webkit-appearance:none;appearance:none;height:30px}
+  .range-wrap input[type=range]:focus{outline:none}
+  .range-wrap input[type=range]::-webkit-slider-runnable-track{background:none;border:none}
+  .range-wrap input[type=range]::-moz-range-track{background:none;border:none}
+  .range-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--mag);cursor:grab;pointer-events:auto;box-shadow:0 1px 4px rgba(0,0,0,.25);margin-top:-6px}
+  .range-wrap input[type=range]::-webkit-slider-thumb:active{cursor:grabbing}
+  .range-wrap input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--mag);cursor:grab;pointer-events:auto;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+  .filtered-tag{margin-left:auto;font-size:12px;color:var(--mag);font-weight:600;align-self:center}
+  /* ticker */
+  .ticker{background:var(--navy);border-radius:10px;overflow:hidden;position:relative;height:44px;margin-bottom:14px}
+  .ticker-track{display:flex;gap:30px;align-items:center;height:44px;white-space:nowrap;padding-left:18px;animation:tk 26s linear infinite}
+  @keyframes tk{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  .ticker:hover .ticker-track{animation-play-state:paused}
+  .tk-it{display:flex;align-items:center;gap:8px;font-size:13px;color:#c8d0e2}
+  .tk-it b{color:#fff;font-weight:600}
+  .tk-dot{width:7px;height:7px;border-radius:50%;background:var(--mag)}
+  /* tabs */
+  .tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px}
+  .tab{padding:9px 14px;font-size:13px;color:var(--muted2);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;font-weight:500}
+  .tab:hover{color:var(--navy)}
+  .tab.active{color:var(--mag);border-bottom-color:var(--mag);font-weight:600}
+  /* grid + cards */
+  .section{display:none}
+  #splash{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#18233F 0%,#2a1830 55%,#E6005A 165%);display:flex;align-items:center;justify-content:center;padding:30px;overflow:auto}
+  #splash .sp-inner{max-width:880px;width:100%;color:#fff;text-align:center}
+  #splash .cover-badge{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.18em;color:var(--mag2);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);padding:6px 14px;border-radius:20px;margin-bottom:18px}
+  #splash .cover-title{font-size:46px;font-weight:800;letter-spacing:-.5px;line-height:1.05}
+  #splash .cover-title span{color:var(--mag2)}
+  #splash .cover-sub{color:#c3c9da;margin-top:10px;font-size:15px}
+  #splash .cover-kpis{display:flex;flex-wrap:wrap;gap:14px;margin-top:32px;justify-content:center}
+  #splash .cover-kpi{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:16px 20px;min-width:120px;flex:1 1 130px}
+  #splash .ck-val{font-size:28px;font-weight:800;line-height:1}
+  #splash .ck-lbl{font-size:11px;color:#c3c9da;margin-top:6px;text-transform:uppercase;letter-spacing:.04em}
+  #splash .sp-enter{margin-top:32px;background:var(--mag);color:#fff;border:none;border-radius:12px;padding:15px 38px;font-size:16px;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:0 8px 24px rgba(230,0,90,.4)}
+  #splash .sp-enter:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(230,0,90,.55)}
+  #splash .cover-nav{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px;justify-content:center}
+  #splash .cover-nav button{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
+  #splash .cover-nav button:hover{background:rgba(255,255,255,.2)}
+  #splash .cover-foot{margin-top:28px;color:#aab2c8;font-size:13px;line-height:1.7;max-width:720px;margin-left:auto;margin-right:auto}
+  .section.active{display:block;animation:fade .25s ease}
+  .cover{background:linear-gradient(135deg,var(--navy) 0%,#2a1830 55%,var(--mag) 140%);border-radius:18px;padding:48px 44px;color:#fff;position:relative;overflow:hidden}
+  .cover::after{content:'';position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;background:rgba(230,0,90,.18)}
+  .cover-badge{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.18em;color:var(--mag2);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);padding:6px 14px;border-radius:20px;margin-bottom:18px}
+  .cover-title{font-size:42px;font-weight:800;letter-spacing:-.5px;line-height:1.05}
+  .cover-title span{color:var(--mag2)}
+  .cover-sub{color:#c3c9da;margin-top:10px;font-size:15px}
+  .cover-kpis{display:flex;flex-wrap:wrap;gap:14px;margin-top:30px;position:relative;z-index:1}
+  .cover-kpi{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:16px 20px;min-width:130px;flex:1}
+  .cover-kpi .ck-val{font-size:30px;font-weight:800;line-height:1}
+  .cover-kpi .ck-lbl{font-size:12px;color:#c3c9da;margin-top:6px;text-transform:uppercase;letter-spacing:.04em}
+  .cover-nav{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px;position:relative;z-index:1}
+  .cover-nav button{background:#fff;color:var(--navy);border:none;border-radius:10px;padding:12px 18px;font-size:14px;font-weight:600;cursor:pointer;transition:transform .15s,box-shadow .15s;display:flex;align-items:center;gap:8px}
+  .cover-nav button:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.3)}
+  .cover-nav button.ghost{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.25)}
+  .cover-foot{margin-top:30px;color:#aab2c8;font-size:13px;line-height:1.7;position:relative;z-index:1;max-width:780px}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .grid{display:grid;gap:12px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .g4{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .card h3{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+  .card h3 .ic{color:var(--mag)}
+  .card h3 .tag{margin-left:auto;background:var(--mag3);color:var(--mag);font-size:12px;font-weight:700;padding:2px 10px;border-radius:20px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .kpi .lbl{font-size:12px;color:var(--muted2);display:flex;align-items:center;gap:6px}
+  .kpi .val{font-size:27px;font-weight:700;color:var(--navy);line-height:1.1;margin-top:5px}
+  .kpi .sub{font-size:11px;color:var(--muted2);margin-top:3px}
+  .kpi.accent{border-left:3px solid var(--mag)}
+  .mb12{margin-bottom:12px}
+  .mt12{margin-top:12px}
+  /* bars */
+  .hbar{display:flex;flex-direction:column;gap:9px}
+  .hbar .row{display:grid;grid-template-columns:175px 1fr;align-items:center;gap:10px}
+  .hbar .lab{font-size:12px;color:var(--ink);text-align:right;white-space:normal;overflow-wrap:break-word;line-height:1.25}
+  .hbar .track{position:relative;height:22px;background:var(--grayL);border-radius:5px;overflow:hidden}
+  .hbar .fill{position:absolute;left:0;top:0;height:100%;background:var(--mag);border-radius:5px;display:flex;align-items:center;justify-content:flex-end;padding-right:7px;color:#fff;font-size:11px;font-weight:600;min-width:20px}
+  .hbar .fill.navy{background:var(--navy)}
+  .hbar .fill.soft{background:var(--mag2);color:#7a2348}
+  .hbar .fill.gray{background:#9aa0b0;color:#fff}
+  /* vbars */
+  .vbars{display:flex;align-items:flex-end;gap:8px;height:160px;padding-top:10px}
+  .vcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
+  .vbar{width:100%;max-width:40px;background:var(--mag);border-radius:5px 5px 0 0;transition:height .3s}
+  .vbar.navy{background:var(--navy)}
+  .vbar.gray{background:#9aa0b0}
+  .vv{font-size:11px;color:var(--navy);margin-bottom:4px;font-weight:600}
+  .vl{font-size:11px;color:var(--muted2);margin-top:6px;white-space:nowrap}
+  .vbars2{display:flex;align-items:flex-end;gap:14px;height:170px;padding-top:14px}
+  .vcol2{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
+  .vpair{display:flex;align-items:flex-end;justify-content:center;gap:5px;height:100%;width:100%}
+  .vb{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;flex:1;max-width:34px}
+  .vb .vbar{width:100%;border-radius:4px 4px 0 0}
+  .vlegend{display:flex;gap:18px;justify-content:center;margin-bottom:8px;font-size:12px;color:var(--muted2)}
+  .vlegend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle}
+  /* legend */
+  .legend{display:flex;flex-direction:column;gap:7px;font-size:12px;color:var(--ink)}
+  .legend .li{display:flex;align-items:center;gap:8px}
+  .sw{width:10px;height:10px;border-radius:3px;flex:none}
+  /* table */
+  table.tb{width:100%;border-collapse:collapse;font-size:12.5px}
+  table.tb th{background:var(--mag);color:#fff;text-align:left;padding:8px 10px;font-weight:600;font-size:12px;position:sticky;top:0}
+  table.tb td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink)}
+  table.tb tr:nth-child(even) td{background:#fafbfe}
+  .pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px}
+  .p-proc{background:var(--mag3);color:#9c476f}
+  .p-improc{background:#fde4ee;color:#a3073f}
+  .p-rec{background:var(--grayL);color:#5b6480}
+  .p-pend{background:#e8ebf3;color:var(--navy)}
+  .tbwrap{max-height:520px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+  .empty{color:var(--muted2);font-size:13px;padding:18px;text-align:center}
+  .note-p{font-size:13.5px;color:var(--ink);line-height:1.7;margin-bottom:10px}
+  .mapwrap{display:grid;grid-template-columns:1fr 280px;gap:16px;align-items:start}
+  @media(max-width:760px){.mapwrap{grid-template-columns:1fr}}
+  .foot{margin-top:18px;font-size:11px;color:var(--muted2);text-align:center;line-height:1.6}
+  /* storytelling */
+  .story{background:linear-gradient(0deg,#fff,#fff);border:1px solid var(--line);border-left:4px solid var(--mag);border-radius:0 12px 12px 0;padding:16px 20px;margin-bottom:14px}
+  .story h3{font-size:13px;font-weight:600;color:var(--mag);margin-bottom:8px;display:flex;align-items:center;gap:7px;text-transform:uppercase;letter-spacing:.04em}
+  .story p{font-size:14.5px;color:var(--ink);line-height:1.8;margin-bottom:8px}
+  .story p:last-child{margin-bottom:0}
+  .story b{color:var(--navy);font-weight:600}
+  .story .up{color:#c0392b;font-weight:600}
+  .story .down{color:#1d9e75;font-weight:600}
+  .story .hl{background:var(--mag3);color:#a3073f;padding:1px 6px;border-radius:5px;font-weight:600}
+  .secttl{font-size:13px;font-weight:600;color:var(--navy);margin:18px 0 10px;display:flex;align-items:center;gap:7px}
+  .secttl .ic{color:var(--mag)}
+  .secttl .tag{margin-left:auto;font-size:11px;color:var(--muted2);font-weight:400;text-transform:none;letter-spacing:0}
+  .drill{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+  .drill .dh{display:flex;align-items:flex-start;gap:8px}
+  .drill .rank{width:22px;height:22px;border-radius:50%;background:var(--navy);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+  .drill .dt{font-size:13.5px;font-weight:600;color:var(--navy);line-height:1.3}
+  .drill .dv{margin-left:auto;text-align:right;flex:none}
+  .drill .dv b{font-size:20px;color:var(--mag);font-weight:700}
+  .drill .dv span{font-size:11px;color:var(--muted2);display:block}
+  .stack{display:flex;height:18px;border-radius:5px;overflow:hidden;background:var(--grayL)}
+  .stack span{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff;min-width:0}
+  .drow{display:flex;justify-content:space-between;font-size:12px;color:var(--ink);padding:3px 0;border-top:1px dashed var(--line)}
+  .drow .k{color:var(--muted2)}
+  .drow .v{font-weight:600;color:var(--navy)}
+  .insight{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink);background:#f7f9fd;border-radius:8px;padding:9px 12px;margin-bottom:8px}
+  .insight .ib{color:var(--mag);flex:none;font-weight:700}
+</style>
+</head>
+<body>
+<div id="splash"></div>
+<div class="app">
+  <div class="top">
+    <span class="logo">akad</span>
+    <div>
+      <h1>Ouvidoria — Painel analítico</h1>
+      <div class="sub">Reclamações, encerramentos, repique e satisfação</div>
+    </div>
+    <span class="period">📅 <span id="periodLabel">Jan–Jun 2026</span></span>
+  </div>
+
+  <div class="filters">
+    <div class="fg fg-range"><label>Período <span id="rangeLabel"></span></label>
+      <div class="range-wrap">
+        <div class="range-track"><div class="range-fill" id="rangeFill"></div></div>
+        <input type="range" id="rMin" step="1">
+        <input type="range" id="rMax" step="1">
+      </div>
+    </div>
+    <div class="fg"><label>Canal de origem</label><select id="fCanal"></select></div>
+    <div class="fg"><label>Ouvidoria</label><select id="fOuv"></select></div>
+    <button class="btn-reset" id="btnReset">↺ Limpar filtros</button>
+    <span class="filtered-tag" id="filterTag"></span>
+  </div>
+
+  <div class="ticker"><div class="ticker-track" id="ticker"></div></div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div id="sec-exec" class="section"></div>
+  <div id="sec-diag" class="section"></div>
+  <div id="sec-entradas" class="section"></div>
+  <div id="sec-encerradas" class="section"></div>
+  <div id="sec-encclass" class="section"></div>
+  <div id="sec-class" class="section"></div>
+  <div id="sec-repique" class="section"></div>
+  <div id="sec-acum" class="section"></div>
+  <div id="sec-mapa" class="section"></div>
+  <div id="sec-mapeamento" class="section"></div>
+  <div id="sec-notas" class="section"></div>
+  <div id="sec-rec" class="section"></div>
+
+  <div class="foot">
+    Painel da Ouvidoria Akad Seguros · dados de janeiro a junho de 2026 · 70 entradas conhecidas + 12 recusadas (82 registros), 22 repiques (2026), 1 notificação extrajudicial.<br>
+    "Entradas" segue a definição do relatório oficial: reclamações conhecidas, excluindo as recusadas. Repique e notificações refletem o acumulado do período; filtros de mês aplicam-se à base de reclamações.
+  </div>
+</div>
+
+<script>
+const BASE = [{"mes": 1, "status": "2 - IMPROCEDENTE", "canal": "Canal direto", "canalRec": "3 Telefone", "recl": "3 BENEFICIARIO", "uf": "MG", "ramo": "RC PROFISSIONAL", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "104 – Negativa ou recusa", "nota": "NÃO SE APLICA", "tme": 8, "mesEnc": 1}, {"mes": 1, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "SP", "ramo": "RCPM", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "104 – Negativa ou recusa", "nota": "AG. AVALIAÇÃO", "tme": 8, "mesEnc": 1}, {"mes": 1, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "GO", "ramo": "RD - BIKE", "assunto": "34 SEGURO PARA BICICLETA", "problema": "104 – Negativa ou recusa", "nota": "AG. AVALIAÇÃO", "tme": 8, "mesEnc": 1}, {"mes": 1, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "MG", "ramo": "RC PROFISSIONAL", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "AG. AVALIAÇÃO", "tme": 4, "mesEnc": 1}, {"mes": 1, "status": "1 - PROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "SP", "ramo": "EMP", "assunto": "8 EMPRESARIAL", "problema": "104 – Negativa ou recusa", "nota": "AG. AVALIAÇÃO", "tme": 10, "mesEnc": 1}, {"mes": 1, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "MG", "ramo": "RC PROFISSIONAL", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "72 – Cancelamento unilateral pela empresa", "nota": "AG. AVALIAÇÃO", "tme": 11, "mesEnc": 1}, {"mes": 1, "status": "RECUSADO", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "RECUSADO", "uf": "PR", "ramo": "RECUSADO", "assunto": "RECUSADO", "problema": "RECUSADO", "nota": "NÃO SE APLICA", "tme": 9, "mesEnc": 1}, {"mes": 1, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "SP", "ramo": "EMP", "assunto": "8 EMPRESARIAL", "problema": "104 – Negativa ou recusa", "nota": "AG. AVALIAÇÃO", "tme": 6, "mesEnc": 1}, {"mes": 1, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "RS", "ramo": "AP", "assunto": "25 ACIDENTES PESSOAIS", "problema": "72 – Cancelamento unilateral pela empresa", "nota": "AG. AVALIAÇÃO", "tme": 10, "mesEnc": 2}, {"mes": 1, "status": "RECUSADO", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "RECUSADO", "uf": "RS", "ramo": "RECUSADO", "assunto": "RECUSADO", "problema": "RECUSADO", "nota": "NÃO SE APLICA", "tme": 4, "mesEnc": 1}, {"mes": 1, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "SP", "ramo": "RD - EQUIPAMENTOS", "assunto": "42 DEMAIS RISCOS DIVERSOS NÃO CLASSIFICADOS EXPLICITAMENTE NOS SEGMENTOS  DESTA TABELA", "problema": "104 – Negativa ou recusa", "nota": "1", "tme": 10, "mesEnc": 2}, {"mes": 2, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "SC", "ramo": "RC PROFISSIONAL", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "NÃO AVALIADA", "tme": 10, "mesEnc": 2}, {"mes": 2, "status": "RECUSADO", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "RECUSADO", "uf": "GO", "ramo": "RECUSADO", "assunto": "RECUSADO", "problema": "RECUSADO", "nota": "NÃO SE APLICA", "tme": 10, "mesEnc": 2}, {"mes": 2, "status": "2 - IMPROCEDENTE", "canal": "Canal direto", "canalRec": "3 Telefone", "recl": "2 TERCEIRO", "uf": "SP", "ramo": "EMP", "assunto": "8 EMPRESARIAL", "problema": "104 – Negativa ou recusa", "nota": "NÃO SE APLICA", "tme": 15, "mesEnc": 2}, {"mes": 2, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "3 BENEFICIARIO", "uf": "PE", "ramo": "RC PROFISSIONAL", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "104 – Negativa ou recusa", "nota": "AG. AVALIAÇÃO", "tme": 10, "mesEnc": 2}, {"mes": 2, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "RS", "ramo": "AP", "assunto": "25 ACIDENTES PESSOAIS", "problema": "41 - Apólice /Certificado /Título /Contrato", "nota": "AG. AVALIAÇÃO", "tme": 10, "mesEnc": 2}, {"mes": 2, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "SP", "ramo": "RD - BIKE", "assunto": "34 SEGURO PARA BICICLETA", "problema": "41 - Apólice /Certificado /Título /Contrato", "nota": "AG. AVALIAÇÃO", "tme": 9, "mesEnc": 2}, {"mes": 2, "status": "1 - PROCEDENTE", "canal": "Canal direto", "canalRec": "2 E-mail", "recl": "1 SEGURADO", "uf": "RJ", "ramo": "TRANSP. INTERNACIONAL", "assunto": "18 TRANSPORTES - RC", "problema": "104 – Negativa ou recusa", "nota": "NÃO SE APLICA", "tme": 15, "mesEnc": 2}, {"mes": 2, "status": "1 - PROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "GO", "ramo": "AP", "assunto": "25 ACIDENTES PESSOAIS", "problema": "41 - Apólice /Certificado /Título /Contrato", "nota": "AG. AVALIAÇÃO", "tme": 10, "mesEnc": 2}, {"mes": 2, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "SP", "ramo": "RCTR-C", "assunto": "18 TRANSPORTES - RC", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "AG. AVALIAÇÃO", "tme": 10, "mesEnc": 2}, {"mes": 2, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "MG", "ramo": "RCTR-C", "assunto": "18 TRANSPORTES - RC", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "AG. AVALIAÇÃO", "tme": 9, "mesEnc": 2}, {"mes": 2, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "SP", "ramo": "RCF - DC", "assunto": "18 TRANSPORTES - RC", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "AG. AVALIAÇÃO", "tme": 8, "mesEnc": 2}, {"mes": 2, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "MG", "ramo": "VIDA", "assunto": "38 VG -VIDA EM GRUPO", "problema": "72 – Cancelamento unilateral pela empresa", "nota": "AG. AVALIAÇÃO", "tme": 10, "mesEnc": 3}, {"mes": 2, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "SP", "ramo": "RCPM", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "104 – Negativa ou recusa", "nota": "1", "tme": 10, "mesEnc": 3}, {"mes": 2, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "2 TERCEIRO", "uf": "PR", "ramo": "EMP", "assunto": "8 EMPRESARIAL", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "AG. AVALIAÇÃO", "tme": 10, "mesEnc": 3}, {"mes": 2, "status": "2 - IMPROCEDENTE", "canal": "Canal direto", "canalRec": "3 Telefone", "recl": "2 TERCEIRO", "uf": "RS", "ramo": "RCPM", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "NÃO SE APLICA", "tme": 15, "mesEnc": 3}, {"mes": 2, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "SP", "ramo": "RC GERAL", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "104 – Negativa ou recusa", "nota": "AG. AVALIAÇÃO", "tme": 8, "mesEnc": 3}, {"mes": 2, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "SP", "ramo": "RC PROFISSIONAL", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "41 - Apólice /Certificado /Título /Contrato", "nota": "AG. AVALIAÇÃO", "tme": 10, "mesEnc": 3}, {"mes": 3, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "11 OUTROS", "uf": "PI", "ramo": "RCPM", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "S/N", "tme": 10, "mesEnc": 3}, {"mes": 3, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "DF", "ramo": "RC PROFISSIONAL", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "AG. AVALIAÇÃO", "tme": 9, "mesEnc": 3}, {"mes": 3, "status": "RECUSADO", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "RECUSADO", "uf": "BA", "ramo": "RECUSADO", "assunto": "RECUSADO", "problema": "RECUSADO", "nota": "RECUSADO", "tme": 5, "mesEnc": 3}, {"mes": 3, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "DF", "ramo": "RD - BIKE", "assunto": "34 SEGURO PARA BICICLETA", "problema": "41 - Apólice /Certificado /Título /Contrato", "nota": "5", "tme": 8, "mesEnc": 3}, {"mes": 3, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "SP", "ramo": "RCFV", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "AG. AVALIAÇÃO", "tme": 10, "mesEnc": 3}, {"mes": 3, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "2 TERCEIRO", "uf": "BA", "ramo": "RD - BIKE", "assunto": "34 SEGURO PARA BICICLETA", "problema": "104 – Negativa ou recusa", "nota": "S/R", "tme": 10, "mesEnc": 3}, {"mes": 3, "status": "1 - PROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "2 TERCEIRO", "uf": "CE", "ramo": "RCPM", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "81 - Restituição de prêmio (prazo)", "nota": "AG. AVALIAÇÃO", "tme": 10, "mesEnc": 3}, {"mes": 3, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "SP", "ramo": "EMP", "assunto": "8 EMPRESARIAL", "problema": "104 – Negativa ou recusa", "nota": "", "tme": 10, "mesEnc": 3}, {"mes": 3, "status": "RECUSADO", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "RECUSADO", "uf": "GO", "ramo": "RECUSADO", "assunto": "RECUSADO", "problema": "RECUSADO", "nota": "RECUSADO", "tme": -1, "mesEnc": 0}, {"mes": 3, "status": "RECUSADO", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "RECUSADO", "uf": "SP", "ramo": "RECUSADO", "assunto": "RECUSADO", "problema": "RECUSADO", "nota": "RECUSADO", "tme": -1, "mesEnc": 0}, {"mes": 3, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "SP", "ramo": "RD - BIKE", "assunto": "34 SEGURO PARA BICICLETA", "problema": "41 - Apólice /Certificado /Título /Contrato", "nota": "5", "tme": 8, "mesEnc": 3}, {"mes": 3, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "SP", "ramo": "RD - EQUIPAMENTOS", "assunto": "42 DEMAIS RISCOS DIVERSOS NÃO CLASSIFICADOS EXPLICITAMENTE NOS SEGMENTOS  DESTA TABELA", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "1", "tme": 8, "mesEnc": 4}, {"mes": 3, "status": "RECUSADO", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "RECUSADO", "uf": "MG", "ramo": "RECUSADO", "assunto": "RECUSADO", "problema": "RECUSADO", "nota": "RECUSADO", "tme": 8, "mesEnc": 4}, {"mes": 3, "status": "2 - IMPROCEDENTE", "canal": "Canal direto", "canalRec": "3 Telefone", "recl": "6 CORRETOR", "uf": "RJ", "ramo": "RC PROFISSIONAL", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "NÃO SE APLICA", "tme": 14, "mesEnc": 4}, {"mes": 3, "status": "2 - IMPROCEDENTE", "canal": "Canal direto", "canalRec": "2 E-mail", "recl": "1 SEGURADO", "uf": "SP", "ramo": "RD - EQUIPAMENTOS", "assunto": "42 DEMAIS RISCOS DIVERSOS NÃO CLASSIFICADOS EXPLICITAMENTE NOS SEGMENTOS  DESTA TABELA", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "NÃO SE APLICA", "tme": 14, "mesEnc": 4}, {"mes": 4, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "2 TERCEIRO", "uf": "RJ", "ramo": "TRANSP. INTERNACIONAL", "assunto": "17 TRANSPORTES - DANOS", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "", "tme": 9, "mesEnc": 4}, {"mes": 4, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "3 BENEFICIARIO", "uf": "GO", "ramo": "RCPM", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "104 – Negativa ou recusa", "nota": "", "tme": 9, "mesEnc": 4}, {"mes": 4, "status": "2 - IMPROCEDENTE", "canal": "Canal direto", "canalRec": "3 Telefone", "recl": "2 TERCEIRO", "uf": "RS", "ramo": "RCPM", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "NÃO SE APLICA", "tme": 15, "mesEnc": 4}, {"mes": 4, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "PE", "ramo": "VIDA", "assunto": "38 VIDA EM GRUPO", "problema": "104 – Negativa ou recusa", "nota": "AG. AVALIAÇÃO", "tme": 7, "mesEnc": 4}, {"mes": 4, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "GO", "ramo": "AP", "assunto": "25 ACIDENTES PESSOAIS", "problema": "41 - Apólice /Certificado /Título /Contrato", "nota": "5", "tme": 2, "mesEnc": 4}, {"mes": 4, "status": "2 - IMPROCEDENTE", "canal": "Canal direto", "canalRec": "3 Telefone", "recl": "1 SEGURADO", "uf": "SP", "ramo": "RCPM", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "104 – Negativa ou recusa", "nota": "NÃO SE APLICA", "tme": 12, "mesEnc": 4}, {"mes": 4, "status": "2 - IMPROCEDENTE", "canal": "Canal direto", "canalRec": "3 Telefone", "recl": "2 TERCEIRO", "uf": "PR", "ramo": "RD - EQUIPAMENTOS", "assunto": "42 DEMAIS RISCOS DIVERSOS NÃO CLASSIFICADOS EXPLICITAMENTE NOS SEGMENTOS  DESTA TABELA", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "NÃO SE APLICA", "tme": 15, "mesEnc": 4}, {"mes": 4, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "3 BENEFICIARIO", "uf": "PR", "ramo": "RCPM", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "", "tme": 10, "mesEnc": 4}, {"mes": 4, "status": "RECUSADO", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "RECUSADO", "uf": "SP", "ramo": "RECUSADO", "assunto": "RECUSADO", "problema": "RECUSADO", "nota": "RECUSADO", "tme": 7, "mesEnc": 4}, {"mes": 4, "status": "PENDENTE DE DECISÃO", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "ES", "ramo": "", "assunto": "", "problema": "", "nota": "AG. AVALIAÇÃO", "tme": 7, "mesEnc": 4}, {"mes": 4, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "RJ", "ramo": "RD - BIKE", "assunto": "34 SEGURO PARA BICICLETA", "problema": "41 - Apólice /Certificado /Título /Contrato", "nota": "AG. AVALIAÇÃO", "tme": 6, "mesEnc": 4}, {"mes": 4, "status": "RECUSADO", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "2 TERCEIRO", "uf": "DF", "ramo": "RECUSADO", "assunto": "RECUSADO", "problema": "RECUSADO", "nota": "RECUSADO", "tme": 2, "mesEnc": 4}, {"mes": 4, "status": "1 - PROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "3 BENEFICIARIO", "uf": "SP", "ramo": "RCPM", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "AG. AVALIAÇÃO", "tme": 9, "mesEnc": 5}, {"mes": 4, "status": "1 - PROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "PR", "ramo": "GARANTIA", "assunto": "13 GARANTIA", "problema": "41 - Apólice /Certificado /Título /Contrato", "nota": "AG. AVALIAÇÃO", "tme": 9, "mesEnc": 5}, {"mes": 5, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "3 BENEFICIARIO", "uf": "MG", "ramo": "RCPM", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "", "tme": 9, "mesEnc": 5}, {"mes": 5, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "2 TERCEIRO", "uf": "PR", "ramo": "RCPM", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "1", "tme": 9, "mesEnc": 5}, {"mes": 5, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "3 BENEFICIARIO", "uf": "RJ", "ramo": "", "assunto": "", "problema": "", "nota": "1", "tme": 10, "mesEnc": 5}, {"mes": 5, "status": "1 - PROCEDENTE", "canal": "Canal direto", "canalRec": "3 Telefone", "recl": "1 SEGURADO", "uf": "SP", "ramo": "RD - BIKE", "assunto": "34 SEGURO PARA BICICLETA", "problema": "41 - Apólice /Certificado /Título /Contrato", "nota": "NÃO SE APLICA", "tme": 15, "mesEnc": 5}, {"mes": 5, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "SP", "ramo": "AP", "assunto": "25 ACIDENTES PESSOAIS", "problema": "71 - Cancelamento dificultado ou não feito", "nota": "", "tme": 10, "mesEnc": 5}, {"mes": 5, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "2 TERCEIRO", "uf": "SP", "ramo": "RC PROFISSIONAL", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "104 – Negativa ou recusa", "nota": "", "tme": 10, "mesEnc": 5}, {"mes": 5, "status": "2 - IMPROCEDENTE", "canal": "Canal direto", "canalRec": "3 Telefone", "recl": "2 TERCEIRO", "uf": "SP", "ramo": "RC PROFISSIONAL", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "104 – Negativa ou recusa", "nota": "", "tme": 14, "mesEnc": 5}, {"mes": 5, "status": "2 - IMPROCEDENTE", "canal": "Canal direto", "canalRec": "2 E-mail", "recl": "2 TERCEIRO", "uf": "SP", "ramo": "RC PROFISSIONAL", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "104 – Negativa ou recusa", "nota": "", "tme": 14, "mesEnc": 5}, {"mes": 5, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "CE", "ramo": "RCPM", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "104 – Negativa ou recusa", "nota": "", "tme": 8, "mesEnc": 5}, {"mes": 5, "status": "RECUSADO", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "PR", "ramo": "RECUSADO", "assunto": "RECUSADO", "problema": "RECUSADO", "nota": "RECUSADO", "tme": 6, "mesEnc": 5}, {"mes": 5, "status": "PENDENTE DE DECISÃO", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "PR", "ramo": "VIDA", "assunto": "38 VIDA EM GRUPO", "problema": "104 – Negativa ou recusa", "nota": "", "tme": 8, "mesEnc": 5}, {"mes": 5, "status": "RECUSADO", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "RJ", "ramo": "RECUSADO", "assunto": "RECUSADO", "problema": "RECUSADO", "nota": "RECUSADO", "tme": 8, "mesEnc": 5}, {"mes": 5, "status": "2 - IMPROCEDENTE", "canal": "Canal direto", "canalRec": "3 Telefone", "recl": "2 TERCEIRO", "uf": "SP", "ramo": "", "assunto": "", "problema": "", "nota": "", "tme": 14, "mesEnc": 6}, {"mes": 5, "status": "RECUSADO", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "SP", "ramo": "RECUSADO", "assunto": "RECUSADO", "problema": "RECUSADO", "nota": "RECUSADO", "tme": 10, "mesEnc": 6}, {"mes": 5, "status": "PENDENTE DE DECISÃO", "canal": "Canal direto", "canalRec": "3 Telefone", "recl": "2 TERCEIRO", "uf": "GO", "ramo": "", "assunto": "", "problema": "", "nota": "", "tme": -1, "mesEnc": 0}, {"mes": 5, "status": "PENDENTE DE DECISÃO", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "2 TERCEIRO", "uf": "MG", "ramo": "", "assunto": "", "problema": "", "nota": "", "tme": -1, "mesEnc": 0}, {"mes": 5, "status": "2 - IMPROCEDENTE", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "6 CORRETOR", "uf": "PR", "ramo": "", "assunto": "", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "", "tme": 9, "mesEnc": 6}, {"mes": 5, "status": "PENDENTE DE DECISÃO", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "2 TERCEIRO", "uf": "SP", "ramo": "", "assunto": "", "problema": "", "nota": "", "tme": -1, "mesEnc": 0}, {"mes": 5, "status": "PENDENTE DE DECISÃO", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "AM", "ramo": "", "assunto": "", "problema": "", "nota": "", "tme": -1, "mesEnc": 0}, {"mes": 5, "status": "PENDENTE DE DECISÃO", "canal": "Canal direto", "canalRec": "3 Telefone", "recl": "3 BENEFICIARIO", "uf": "SP", "ramo": "RCPM", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "101 - Regulação (processo, análise ou documentação)", "nota": "", "tme": -1, "mesEnc": 0}, {"mes": 6, "status": "PENDENTE DE DECISÃO", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "1 SEGURADO", "uf": "SP", "ramo": "", "assunto": "", "problema": "", "nota": "", "tme": -1, "mesEnc": 0}, {"mes": 6, "status": "PENDENTE DE DECISÃO", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "2 TERCEIRO", "uf": "PR", "ramo": "", "assunto": "", "problema": "", "nota": "", "tme": -1, "mesEnc": 0}, {"mes": 6, "status": "PENDENTE DE DECISÃO", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "2 TERCEIRO", "uf": "", "ramo": "", "assunto": "", "problema": "", "nota": "", "tme": -1, "mesEnc": 0}, {"mes": 6, "status": "PENDENTE DE DECISÃO", "canal": "Canal direto", "canalRec": "3 Telefone", "recl": "2 TERCEIRO", "uf": "SP", "ramo": "", "assunto": "", "problema": "", "nota": "", "tme": -1, "mesEnc": 0}, {"mes": 6, "status": "PENDENTE DE DECISÃO", "canal": "Canal Indireto", "canalRec": "14 Consumidor.gov.br", "recl": "2 TERCEIRO", "uf": "PB", "ramo": "RCPM", "assunto": "16 RESPONSABILIDADE CIVIL", "problema": "", "nota": "", "tme": -1, "mesEnc": 0}];
+const REP = [{"mes": 1, "status": "RESOLVIDO", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2025}, {"mes": 1, "status": "RESOLVIDO", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2025}, {"mes": 1, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 1, "status": "RESOLVIDO", "posneg": "POSITIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 6, "status": "RESOLVIDO", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2025}, {"mes": 2, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 2, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 2, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 2, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 1, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 4, "status": "RESOLVIDO", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2025}, {"mes": 4, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 4, "status": "RESOLVIDO", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2025}, {"mes": 5, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 5, "status": "RESOLVIDO", "posneg": "", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 5, "status": "RESOLVIDO", "posneg": "POSITIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 5, "status": "RESOLVIDO", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2025}, {"mes": 6, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 6, "status": "RESOLVIDO", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2025}, {"mes": 6, "status": "RESOLVIDO", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2025}, {"mes": 7, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 7, "status": "RESOLVIDO", "posneg": "POSITIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 6, "status": "RESOLVIDO", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2025}, {"mes": 6, "status": "RESOLVIDO", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2025}, {"mes": 6, "status": "RESOLVIDO", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2025}, {"mes": 4, "status": "RESOLVIDO", "posneg": "POSITIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 11, "status": "RESOLVIDO", "posneg": "POSITIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2017}, {"mes": 7, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 7, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 7, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 7, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 7, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 7, "status": "RESOLVIDO", "posneg": "POSITIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 7, "status": "RESOLVIDO", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2025}, {"mes": 7, "status": "RESOLVIDO", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2025}, {"mes": 8, "status": "RESOLVIDO", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2025}, {"mes": 9, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 9, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 9, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 9, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 9, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 10, "status": "RESOLVIDO", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2025}, {"mes": 10, "status": "RESOLVIDO", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2025}, {"mes": 10, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 11, "status": "RESOLVIDO", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2025}, {"mes": 11, "status": "RESOLVIDO", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2025}, {"mes": 11, "status": "RESOLVIDO", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2025}, {"mes": 12, "status": "RESOLVIDO", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2025}, {"mes": 12, "status": "RESOLVIDO", "posneg": "POSITIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2025}, {"mes": 12, "status": "RESOLVIDO", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2025}, {"mes": 1, "status": "PENDENTE", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2026}, {"mes": 1, "status": "PENDENTE", "posneg": "S/R", "tipo": "REPIQUE COMPLEMENTO", "ano": 2026}, {"mes": 2, "status": "RESOLVIDO", "posneg": "POSITIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2026}, {"mes": 1, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2026}, {"mes": 1, "status": "RESOLVIDO", "posneg": "NEGATIVA", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2026}, {"mes": 3, "status": "RESOLVIDO", "posneg": "", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2026}, {"mes": 2, "status": "PENDENTE", "posneg": "", "tipo": "REPIQUE ACOMPANHAMENTO", "ano": 2026}, {"mes": 3, "status": "PENDENTE", "posneg": "", "tipo": "REPIQUE COMPLEMENTO", "ano": 2026}, {"mes": 2, "status": "PENDENTE", "posneg": "", "tipo": "REPIQUE COMPLEMENTO", "ano": 2026}, {"mes": 3, "status": "RESOLVIDA", "posneg": "", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2026}, {"mes": 3, "status": "RESOLVIDA", "posneg": "", "tipo": "REPIQUE COMPLEMENTO", "ano": 2026}, {"mes": 4, "status": "RESOLVIDA", "posneg": "", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2026}, {"mes": 4, "status": "RESOLVIDA", "posneg": "", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2026}, {"mes": 4, "status": "RESOLVIDA", "posneg": "", "tipo": "REPIQUE", "ano": 2026}, {"mes": 4, "status": "RESOLVIDA", "posneg": "", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2026}, {"mes": 4, "status": "RESOLVIDA", "posneg": "", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2026}, {"mes": 4, "status": "RESOLVIDA", "posneg": "", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2026}, {"mes": 5, "status": "RESOLVIDA", "posneg": "", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2026}, {"mes": 5, "status": "RESOLVIDA", "posneg": "", "tipo": "REPIQUE", "ano": 2026}, {"mes": 5, "status": "RESOLVIDA", "posneg": "", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2026}, {"mes": 5, "status": "RESOLVIDA", "posneg": "", "tipo": "REPIQUE", "ano": 2026}, {"mes": 5, "status": "RESOLVIDA", "posneg": "", "tipo": "REPIQUE AVALIAÇÃO", "ano": 2026}];
+const MAPE = [{"nome": "ANDREIA PESSOA DO COUTO BARCELOS", "canal": "TELEFONE", "data": "13/01/2026", "fato": "Inconsistência sistêmica Hubspot", "resumo": "Bloqueio na remessa de e-mail via plataforma Hubspot, impossibilitando o envio da resposta.", "classif": "IMPROCEDENTE"}, {"nome": "GRAZIELLE APARECIDA SILVA", "canal": "CONSUMIDOR.GOV.BR", "data": "16/01/2026", "fato": "Sinistro", "resumo": "Problemas na regulação do sinistro — reversão do parecer. Pendente registro no sistema Hubspot.", "classif": "PROCEDENTE"}, {"nome": "DELCIO CARDIAS DE SOUZA LEDESMA", "canal": "CONSUMIDOR.GOV.BR", "data": "10/02/2026", "fato": "Documentação", "resumo": "Subsídios pendentes. Pendente registro no sistema Hubspot.", "classif": "IMPROCEDENTE"}, {"nome": "HENRIQUE DA SILVA SANTOS", "canal": "CONSUMIDOR.GOV.BR", "data": "11/02/2026", "fato": "—", "resumo": "Reclamação encaminhada à análise da Ouvidoria.", "classif": "IMPROCEDENTE"}, {"nome": "JURANDIR LEMOS FILHO", "canal": "E-MAIL", "data": "12/02/2026", "fato": "Inconsistência sistêmica Hubspot", "resumo": "Bloqueio do Hubspot para remessa de e-mail. Ofício eletrônico SUSEP — agendamento de reunião com a SUSEP.", "classif": "IMPROCEDENTE"}, {"nome": "INDÚSTRIAS NUCLEARES DO BRASIL S.A.", "canal": "E-MAIL", "data": "12/02/2026", "fato": "Sinistro", "resumo": "Reversão do parecer.", "classif": "PROCEDENTE"}, {"nome": "CLAUDOMIRO JOSE NASCIMENTO", "canal": "CONSUMIDOR.GOV.BR", "data": "14/02/2026", "fato": "Documentação", "resumo": "Subsídios pendentes — enviada resposta parcial.", "classif": "PROCEDENTE"}, {"nome": "LENON HENRIQUE DA SILVA", "canal": "CONSUMIDOR.GOV.BR", "data": "18/02/2026", "fato": "Sinistro", "resumo": "Subsídios conclusivos pendentes — enviada resposta parcial.", "classif": "IMPROCEDENTE"}, {"nome": "MAIRA FERREIRA SILVA", "canal": "CONSUMIDOR.GOV.BR", "data": "20/02/2026", "fato": "Atendimento", "resumo": "Subsídios pendentes — enviada resposta parcial.", "classif": "IMPROCEDENTE"}, {"nome": "ALESSANDRO FLORIANO DA SILVA", "canal": "CONSUMIDOR.GOV.BR", "data": "23/02/2026", "fato": "Atendimento", "resumo": "Disponibilização das gravações de atendimento SAC sem remessa das respostas conclusivas de cada protocolo.", "classif": "IMPROCEDENTE"}, {"nome": "HENRIQUE DA SILVA SANTOS", "canal": "TELEFONE", "data": "24/02/2026", "fato": "Cadastro", "resumo": "Pendência de dados cadastrais no ticket e no relato da reclamação.", "classif": "IMPROCEDENTE"}, {"nome": "NAYANA LEITE DE AGUIAR PINHEIRO", "canal": "CONSUMIDOR.GOV.BR", "data": "13/03/2026", "fato": "Estorno", "resumo": "Demora na efetivação do estorno de valores após o cancelamento.", "classif": "PROCEDENTE"}, {"nome": "MARIA TEREZA DE CARVALHO SARDINHA", "canal": "CONSUMIDOR.GOV.BR", "data": "01/04/2026", "fato": "Sinistro", "resumo": "Subsídios conclusivos pendentes — enviada resposta parcial.", "classif": "IMPROCEDENTE"}, {"nome": "CRISTIANO HAAS", "canal": "CONSUMIDOR.GOV.BR", "data": "01/04/2026", "fato": "Sinistro", "resumo": "Regulação fora do prazo — subsídios insuficientes.", "classif": "IMPROCEDENTE"}, {"nome": "RONNY SALOMAO DA SILVA", "canal": "CONSUMIDOR.GOV.BR", "data": "23/04/2026", "fato": "Pendência registro SUSEP", "resumo": "Subsídios pendentes — enviada resposta parcial.", "classif": "IMPROCEDENTE"}, {"nome": "HILGO GONÇALVES JUNIOR", "canal": "CONSUMIDOR.GOV.BR", "data": "28/04/2026", "fato": "Pendência registro SUSEP", "resumo": "Inconsistência sistêmica — instabilidade na plataforma de integração de dados para a SUSEP.", "classif": "PROCEDENTE"}, {"nome": "ALICE MOREIRA PIMENTA", "canal": "CONSUMIDOR.GOV.BR", "data": "28/04/2026", "fato": "Sinistro", "resumo": "Demora na regulação — último documento entregue em 11/03 e regulação concluída em 13/04.", "classif": "PROCEDENTE"}, {"nome": "WAMBERTO DE MELO SOARES", "canal": "TELEFONE", "data": "13/05/2026", "fato": "Emissão", "resumo": "Descumprimento do prazo informado ao cliente para emissão da apólice.", "classif": "PROCEDENTE"}];
+const NOTAS = {"titulo": "Nota da Ouvidoria — Maio/2026", "paragrafos": ["A Ouvidoria registrou, em maio de 2026, 20 acionamentos, sendo 05 do canal central 0800, 01 via e-mail e 14 oriundos do Consumidor.Gov.br, dos quais 03 foram recusados.", "Os 20 acionamentos recebidos na Ouvidoria receberam a seguinte classificação:"], "classificacao": [{"k": "Procedente", "v": 1}, {"k": "Improcedente", "v": 10}, {"k": "Recusado", "v": 3}, {"k": "Pendente de decisão", "v": 6}]};
+const REC = [{"protocolo": "41613649817", "abertura": "06/03/2026", "envio": "06/03/2026", "prazo": "—", "status": "Aguardando retorno", "acao": "Diante da recorrência de bloqueio do sistema Hubspot para envio de e-mail aos reclamantes — o que impacta a fluidez da comunicação com o consumidor e apresenta risco de infração à Resolução CNSP 445/22 — sugere-se a adoção de ações para regularização da falha."}];
+const NOTIF_TOTAL = 1;
+
+const MESES=['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const MES_MIN=Math.min(...BASE.map(r=>r.mes).filter(Boolean));
+const MES_MAX=Math.max(...BASE.map(r=>r.mes).filter(Boolean));
+const MESNOME={1:'janeiro',2:'fevereiro',3:'março',4:'abril',5:'maio',6:'junho',7:'julho',8:'agosto',9:'setembro',10:'outubro',11:'novembro',12:'dezembro'};
+const REP_ANO=REP.length?Math.max(...REP.map(r=>r.ano||0)):0;
+const REP_ATUAL=REP.filter(r=>r.ano===REP_ANO);
+const COR={mag:'#E6005A',mag2:'#F4A6C4',navy:'#18233F',gray:'#9aa0b0'};
+const nf=n=>Number(n).toLocaleString('pt-BR');
+const pf=(n,d=1)=>Number(n).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
+
+let state={mesMin:MES_MIN,mesMax:MES_MAX,canal:'all',ouv:'todos'};
+
+function classOf(st){
+  st=(st||'').toUpperCase().trim();
+  if(st.charAt(0)==='1') return 'Procedente';
+  if(st.charAt(0)==='2') return 'Improcedente';
+  if(st.indexOf('RECUSADO')===0) return 'Recusado';
+  if(st.indexOf('PENDENTE')===0) return 'Pendente';
+  return 'Outro';
+}
+function canalCurto(c){
+  c=(c||'').toUpperCase();
+  if(c.indexOf('CONSUMIDOR')>=0) return 'Consumidor.gov';
+  if(c.indexOf('TELEFONE')>=0) return 'Telefone';
+  if(c.indexOf('E-MAIL')>=0||c.indexOf('EMAIL')>=0) return 'E-mail';
+  return c?c.replace(/^\d+\s*/,''):'—';
+}
+function reclCurto(r){ return (r||'').replace(/^\d+\s*/,'').trim()||'—'; }
+function canalTipo(c){ c=(c||'').toUpperCase(); if(c.indexOf('INDIRET')>=0) return 'Indireto'; if(c.indexOf('DIRET')>=0) return 'Direto'; return '—'; }
+function ramoLimpo(r){ r=(r||'').trim(); return (!r||r==='RECUSADO')?'':r; }
+function isEncerrada(r){ return r.tme>=0; }
+
+function applyFilters(rows){
+  return rows.filter(r=>{
+    if(r.mes<state.mesMin || r.mes>state.mesMax) return false;
+    if(state.canal!=='all' && canalCurto(r.canal||r.canalRec)!==state.canal) return false;
+    if(state.ouv==='sem' && classOf(r.status)==='Recusado') return false;
+    if(state.ouv==='rec' && classOf(r.status)!=='Recusado') return false;
+    return true;
+  });
+}
+function groupCount(rows,keyFn){
+  const m={};
+  rows.forEach(r=>{const k=keyFn(r); if(k===''||k==null) return; m[k]=(m[k]||0)+1;});
+  return Object.entries(m).map(([k,v])=>({k,v})).sort((a,b)=>b.v-a.v);
+}
+
+/* ---------- chart builders ---------- */
+function hbar(data,{cls='',max=null,limit=null,fmt=nf}={}){
+  if(!data.length) return '<div class="empty">Sem dados para o filtro atual.</div>';
+  if(limit) data=data.slice(0,limit);
+  const mx=max||Math.max(...data.map(d=>d.v),1);
+  return '<div class="hbar">'+data.map(d=>{
+    const w=Math.max(d.v/mx*100,3);
+    return `<div class="row"><div class="lab" title="${esc(d.k)}">${esc(d.k)}</div><div class="track"><div class="fill ${cls}" style="width:${w}%">${fmt(d.v)}</div></div></div>`;
+  }).join('')+'</div>';
+}
+function vbars(data,{cls='',fmt=nf}={}){
+  if(!data.length) return '<div class="empty">Sem dados.</div>';
+  const mx=Math.max(...data.map(d=>d.v),1);
+  return '<div class="vbars">'+data.map(d=>{
+    const h=d.v<=0?2:Math.max(d.v/mx*100,4);
+    return `<div class="vcol"><span class="vv">${fmt(d.v)}</span><div class="vbar ${cls}" style="height:${h}%"></div><span class="vl">${esc(d.k)}</span></div>`;
+  }).join('')+'</div>';
+}
+function vbars2(data,opt={}){
+  const labels=opt.labels||['A','B'];
+  const colors=opt.colors||[COR.mag,COR.navy];
+  if(!data.length) return '<div class="empty">Sem dados.</div>';
+  const mx=Math.max(...data.flatMap(d=>[d.a,d.b]),1);
+  const legend=`<div class="vlegend"><span><i style="background:${colors[0]}"></i>${esc(labels[0])}</span><span><i style="background:${colors[1]}"></i>${esc(labels[1])}</span></div>`;
+  const bars=data.map(d=>{
+    const ha=d.a<=0?2:Math.max(d.a/mx*100,4);
+    const hb=d.b<=0?2:Math.max(d.b/mx*100,4);
+    return `<div class="vcol2"><div class="vpair">`+
+      `<div class="vb"><span class="vv">${d.a}</span><div class="vbar" style="height:${ha}%;background:${colors[0]}"></div></div>`+
+      `<div class="vb"><span class="vv">${d.b}</span><div class="vbar" style="height:${hb}%;background:${colors[1]}"></div></div>`+
+      `</div><span class="vl">${esc(d.k)}</span></div>`;
+  }).join('');
+  return legend+`<div class="vbars2">${bars}</div>`;
+}
+function barsByCount(data,opts={}){
+  // poucos itens: barras verticais (boa na visão mensal); muitos: horizontais (rótulos legíveis)
+  if(data.length<=5) return vbars(data,{cls:opts.cls||''});
+  return hbar(data,{cls:opts.cls||'',limit:opts.limit||14});
+}
+function donut(segs,total,centerLabel){
+  const t=total||segs.reduce((a,s)=>a+s.v,0);
+  const C=2*Math.PI*54;
+  let acc=-90;
+  const circles=segs.filter(s=>s.v>0).map(s=>{
+    const frac=s.v/t, len=frac*C;
+    const el=`<circle cx="60" cy="60" r="54" fill="none" stroke="${s.color}" stroke-width="13" stroke-dasharray="${len.toFixed(2)} ${(C-len).toFixed(2)}" transform="rotate(${acc.toFixed(2)} 60 60)"/>`;
+    acc+=frac*360; return el;
+  }).join('');
+  return `<svg width="130" height="130" viewBox="0 0 120 120" role="img" aria-label="${esc(centerLabel||'')}">
+    <circle cx="60" cy="60" r="54" fill="none" stroke="#eef1f7" stroke-width="13"/>${circles}
+    <text x="60" y="55" text-anchor="middle" font-size="23" font-weight="700" fill="#18233F">${nf(t)}</text>
+    <text x="60" y="72" text-anchor="middle" font-size="10" fill="#8089a0">${esc(centerLabel||'total')}</text></svg>`;
+}
+function legendOf(segs,t){
+  t=t||segs.reduce((a,s)=>a+s.v,0);
+  return '<div class="legend">'+segs.map(s=>`<div class="li"><span class="sw" style="background:${s.color}"></span>${esc(s.label)} · ${nf(s.v)}${t?` (${pf(s.v/t*100,0)}%)`:''}</div>`).join('')+'</div>';
+}
+function gauge(pct,label){
+  const a=Math.PI*(1-pct/100);
+  const x=90+70*Math.cos(a), y=90-70*Math.sin(a);
+  const large=pct>50?1:0;
+  return `<svg width="190" height="118" viewBox="0 0 180 110" role="img" aria-label="${esc(label)} ${pf(pct,0)} por cento">
+    <path d="M20 90 A70 70 0 0 1 160 90" fill="none" stroke="#eef1f7" stroke-width="14" stroke-linecap="round"/>
+    <path d="M20 90 A70 70 0 ${large} 1 ${x.toFixed(1)} ${y.toFixed(1)}" fill="none" stroke="#E6005A" stroke-width="14" stroke-linecap="round"/>
+    <text x="90" y="80" text-anchor="middle" font-size="30" font-weight="700" fill="#18233F">${pf(pct,0)}%</text>
+    <text x="90" y="100" text-anchor="middle" font-size="11" fill="#8089a0">${esc(label)}</text></svg>`;
+}
+const UF_COORD={AC:[-9,-70.5],AM:[-4,-64.5],RR:[2,-61.4],PA:[-4.5,-52.5],AP:[1.5,-51.5],RO:[-11,-62.8],TO:[-10,-48.3],MA:[-5,-45.3],PI:[-7.5,-42.7],CE:[-5.2,-39.6],RN:[-5.8,-36.6],PB:[-7.2,-36.6],PE:[-8.4,-37.9],AL:[-9.6,-36.7],SE:[-10.6,-37.4],BA:[-12.5,-41.7],MT:[-13,-56],GO:[-16,-49.6],DF:[-15.8,-47.9],MG:[-18.6,-44.6],ES:[-19.6,-40.4],RJ:[-22.4,-42.6],SP:[-22.2,-48.6],PR:[-24.6,-51.6],SC:[-27.3,-50.4],RS:[-30.2,-53.6],MS:[-20.6,-54.7]};
+const BRASIL_PATH="M131.0,316.9 L141.7,305.0 L150.7,296.5 L156.1,292.9 L162.8,288.1 L163.0,281.1 L159.0,276.0 L155.0,277.7 L156.6,272.7 L157.7,267.5 L157.7,262.7 L154.8,261.1 L151.8,262.5 L148.8,262.1 L147.9,258.8 L147.1,250.7 L145.6,248.1 L140.2,245.8 L136.9,247.5 L128.5,245.8 L129.0,233.9 L126.7,229.0 L129.2,227.2 L128.4,222.3 L130.6,218.4 L132.0,211.5 L130.1,206.1 L125.8,203.6 L124.9,200.2 L126.1,195.1 L110.7,194.8 L107.7,184.6 L110.0,184.4 L109.9,180.7 L108.3,178.1 L108.0,173.0 L103.3,170.4 L98.3,170.5 L95.0,168.0 L89.6,166.3 L86.4,163.0 L77.5,161.5 L68.8,153.7 L69.4,147.8 L68.4,144.5 L69.3,137.9 L58.8,139.4 L54.6,142.7 L47.6,146.2 L45.8,148.9 L41.7,149.1 L35.8,148.3 L31.2,149.8 L27.6,148.8 L28.1,135.5 L21.6,140.7 L14.5,140.5 L11.5,135.8 L6.2,135.3 L7.9,131.5 L3.4,126.2 L0.1,118.3 L2.2,116.7 L2.2,113.0 L7.0,110.5 L6.2,105.8 L8.3,102.7 L8.9,98.7 L18.0,92.7 L24.6,91.0 L25.6,89.7 L32.9,90.1 L36.4,66.1 L36.6,62.3 L35.4,57.3 L31.8,54.1 L31.9,47.8 L36.4,46.3 L38.0,47.2 L38.3,43.9 L33.6,43.0 L33.5,37.5 L49.1,37.7 L51.7,34.7 L53.9,37.5 L55.5,42.6 L57.0,41.5 L61.4,46.2 L67.6,45.6 L69.2,42.9 L75.1,40.9 L78.4,39.4 L79.3,35.7 L85.0,33.2 L84.6,31.4 L77.8,30.7 L76.7,25.1 L77.1,19.3 L73.5,17.0 L75.0,16.2 L80.9,17.3 L87.3,19.5 L89.6,17.4 L95.3,16.1 L104.3,12.8 L107.2,9.5 L106.1,7.0 L110.3,6.6 L112.2,8.6 L111.1,12.5 L113.9,13.8 L115.7,17.9 L113.5,20.9 L112.2,28.4 L114.3,32.8 L114.8,36.9 L119.8,41.0 L123.7,41.4 L124.6,39.7 L127.1,39.3 L130.7,37.8 L133.3,35.5 L137.7,36.2 L139.7,35.9 L144.0,36.6 L144.8,34.8 L143.4,33.1 L144.2,30.5 L147.4,31.3 L151.2,30.4 L155.8,32.3 L159.3,34.1 L161.8,31.7 L163.6,32.1 L164.7,34.5 L168.5,33.9 L171.5,30.6 L174.0,24.1 L178.7,16.1 L181.5,15.7 L183.4,20.6 L187.9,35.9 L192.2,37.3 L192.4,43.3 L186.4,50.5 L188.9,53.2 L203.0,54.6 L203.3,63.3 L209.4,57.6 L219.5,60.7 L232.8,66.1 L236.7,71.2 L235.3,76.0 L244.6,73.4 L260.2,78.0 L272.2,77.6 L284.0,84.9 L294.2,94.7 L300.4,97.2 L307.2,97.6 L310.1,100.3 L312.8,111.5 L314.2,116.8 L311.0,131.2 L306.9,136.9 L295.6,149.1 L290.5,159.0 L284.6,166.6 L282.6,166.8 L280.4,173.2 L280.9,189.6 L278.7,203.1 L277.9,208.8 L275.3,212.3 L273.9,224.0 L265.8,235.4 L264.4,244.5 L258.0,248.2 L256.1,253.5 L247.4,253.5 L234.8,256.8 L229.2,260.7 L220.2,263.3 L210.8,270.2 L204.0,278.9 L202.9,285.5 L204.2,290.3 L202.7,299.1 L200.9,303.4 L195.3,308.2 L186.4,323.6 L179.4,330.6 L174.0,334.6 L170.3,343.0 L165.0,348.0 L162.8,343.0 L166.3,338.9 L161.7,332.9 L155.4,328.1 L147.2,322.5 L144.2,322.7 L136.2,316.0 L131.0,316.9 Z";
+function bubbleMap(data){
+  const W=320,H=350;
+  const proj=(lat,lon)=>[((lon+74)/40)*W, ((6-lat)/40)*H];
+  const mx=Math.max(...data.map(d=>d.v),1);
+  let dots='',labels='';
+  data.forEach(d=>{
+    const c=UF_COORD[d.k]; if(!c) return;
+    const [x,y]=proj(c[0],c[1]);
+    const r=6+Math.sqrt(d.v/mx)*22;
+    dots+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="#E6005A" fill-opacity="0.42" stroke="#E6005A" stroke-width="1.2"/>`;
+    labels+=`<text x="${x.toFixed(1)}" y="${(y+3).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="700" fill="#18233F">${d.k}</text>`;
+    labels+=`<text x="${x.toFixed(1)}" y="${(y+15).toFixed(1)}" text-anchor="middle" font-size="9" fill="#6b7088">${d.v}</text>`;
+  });
+  return `<svg width="100%" viewBox="0 0 ${W} ${H}" role="img" aria-label="Mapa de reclamações por estado" style="max-width:440px">
+    <rect x="0" y="0" width="${W}" height="${H}" fill="#f7f9fd" rx="10"/>
+    <path d="${BRASIL_PATH}" fill="#e7ecf6" stroke="#c2cbe0" stroke-width="1" stroke-linejoin="round"/>
+    <text x="14" y="22" font-size="11" font-weight="700" fill="#b9c2d6" letter-spacing="1">BRASIL</text>${dots}${labels}</svg>`;
+}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+/* ---------- metric calc ---------- */
+function conhecidasDe(rows){return rows.filter(r=>classOf(r.status)!=='Recusado');}
+function metrics(rows){
+  const recebidas=rows.length;
+  const rec=rows.filter(r=>classOf(r.status)==='Recusado');
+  const con=conhecidasDe(rows);            // Entradas = conhecidas (exclui recusados)
+  const enc=con.filter(isEncerrada);
+  const proc=con.filter(r=>classOf(r.status)==='Procedente');
+  const improc=con.filter(r=>classOf(r.status)==='Improcedente');
+  const pend=con.filter(r=>classOf(r.status)==='Pendente');
+  const analisadas=proc.length+improc.length;
+  const notas=con.map(r=>parseFloat((r.nota||'').replace(',','.'))).filter(n=>!isNaN(n)&&n>=1&&n<=5);
+  const satMedia=notas.length?notas.reduce((a,b)=>a+b,0)/notas.length:0;
+  const tmes=enc.map(r=>r.tme).filter(t=>t>=0);
+  const tmeMedia=tmes.length?tmes.reduce((a,b)=>a+b,0)/tmes.length:0;
+  const dentro=tmes.filter(t=>t<=15).length;
+  return {recebidas,total:con.length,conhecidas:con.length,enc:enc.length,emAberto:con.length-enc.length,
+    proc:proc.length,improc:improc.length,rec:rec.length,pend:pend.length,analisadas,
+    taxaProc:analisadas?proc.length/analisadas*100:0,
+    taxaEnc:con.length?enc.length/con.length*100:0,
+    satMedia,notasN:notas.length,
+    tmeMedia,dentro,pctDentro:tmes.length?dentro/tmes.length*100:0,tmesN:tmes.length};
+}
+
+/* ---------- diagnóstico: stats de subconjunto, insights e storytelling ---------- */
+function applyFiltersNoMes(rows){
+  return rows.filter(r=>{
+    if(state.canal!=='all' && canalCurto(r.canal||r.canalRec)!==state.canal) return false;
+    if(state.ouv==='sem' && classOf(r.status)==='Recusado') return false;
+    if(state.ouv==='rec' && classOf(r.status)!=='Recusado') return false;
+    return true;
+  });
+}
+function notaMedia(rows){
+  const ns=rows.map(r=>parseFloat((r.nota||'').replace(',','.'))).filter(n=>!isNaN(n)&&n>=1&&n<=5);
+  return {n:ns.length, media:ns.length?ns.reduce((a,b)=>a+b,0)/ns.length:0};
+}
+function subsetStats(sub){
+  const proc=sub.filter(r=>classOf(r.status)==='Procedente').length;
+  const improc=sub.filter(r=>classOf(r.status)==='Improcedente').length;
+  const pend=sub.filter(r=>classOf(r.status)==='Pendente').length;
+  const enc=sub.filter(isEncerrada);
+  const tmes=enc.map(r=>r.tme).filter(t=>t>=0);
+  const tmeMedia=tmes.length?tmes.reduce((a,b)=>a+b,0)/tmes.length:0;
+  const probs=groupCount(sub,r=>{const p=(r.problema||'').trim();return(!p||p==='RECUSADO')?'':p;});
+  const nm=notaMedia(sub);
+  return {vol:sub.length,proc,improc,pend,analisadas:proc+improc,
+    taxaProc:(proc+improc)?proc/(proc+improc)*100:0,tmeMedia,topProb:probs[0]||null,nm};
+}
+function probCurto(p){
+  if(!p) return '—';
+  return p.replace(/^\d+\s*[-–]\s*/,'').split('(')[0].trim();
+}
+function assuntoCurto(a){ return (a||'').replace(/^\d+\s*/,'').trim()||'—'; }
+
+function drillCard(rank,label,sub,totalGeral){
+  const s=subsetStats(sub);
+  const t=s.vol||1;
+  const segImp=s.improc/t*100, segProc=s.proc/t*100, segPend=s.pend/t*100;
+  const stack=`<div class="stack">
+    ${s.improc?`<span style="width:${segImp}%;background:${COR.mag}" title="Improcedente ${s.improc}">${s.improc}</span>`:''}
+    ${s.proc?`<span style="width:${segProc}%;background:${COR.mag2};color:#7a2348" title="Procedente ${s.proc}">${s.proc}</span>`:''}
+    ${s.pend?`<span style="width:${segPend}%;background:${COR.navy}" title="Pendente ${s.pend}">${s.pend}</span>`:''}
+  </div>`;
+  return `<div class="drill">
+    <div class="dh">
+      <span class="rank">${rank}</span>
+      <div class="dt">${esc(label)}</div>
+      <div class="dv"><b>${s.vol}</b><span>${pf(s.vol/totalGeral*100,0)}% do total</span></div>
+    </div>
+    ${stack}
+    <div class="drow"><span class="k">Principal motivo</span><span class="v">${esc(probCurto(s.topProb&&s.topProb.k))}${s.topProb?` (${s.topProb.v})`:''}</span></div>
+    <div class="drow"><span class="k">Procedência</span><span class="v">${pf(s.taxaProc,0)}%</span></div>
+    <div class="drow"><span class="k">TME médio</span><span class="v">${s.tmeMedia?pf(s.tmeMedia,1)+' dias':'—'}</span></div>
+    <div class="drow"><span class="k">Nota Gov</span><span class="v">${s.nm.n?pf(s.nm.media,2)+'/5':'sem avaliação'}</span></div>
+  </div>`;
+}
+
+function narrativa(rows){
+  const con=conhecidasDe(rows);
+  const m=metrics(rows);
+  if(!con.length) return `<div class="story"><h3><span>📊</span> Resumo do período</h3><p>Não há reclamações conhecidas para o filtro selecionado.</p></div>`;
+  const singleMes = state.mesMin===state.mesMax;
+  const fullRange = state.mesMin===MES_MIN && state.mesMax===MES_MAX;
+  const periodo = singleMes ? ('em '+MESNOME[state.mesMin]) : (fullRange ? 'no acumulado de '+MESES[MES_MIN]+'–'+MESES[MES_MAX]+' 2026' : 'no período de '+MESES[state.mesMin]+'–'+MESES[state.mesMax]);
+  // MoM (só quando um único mês está selecionado)
+  let mom='';
+  if(singleMes){
+    const base=applyFiltersNoMes(BASE);
+    const cur=conhecidasDe(base.filter(r=>r.mes===state.mesMin)).length;
+    const prev=conhecidasDe(base.filter(r=>r.mes===state.mesMin-1)).length;
+    if(state.mesMin>1){
+      if(prev===0) mom=' (mês anterior sem registros)';
+      else{const d=(cur-prev)/prev*100; mom=d>=0?` (<span class="up">▲ ${pf(Math.abs(d),0)}%</span> vs mês anterior)`:` (<span class="down">▼ ${pf(Math.abs(d),0)}%</span> vs mês anterior)`;}
+    }
+  } else {
+    const porMes=[];
+    for(let mi=state.mesMin;mi<=state.mesMax;mi++) porMes.push({mi,v:conhecidasDe(con.filter(r=>r.mes===mi)).length});
+    if(porMes.length){const pico=porMes.reduce((a,b)=>b.v>a.v?b:a,porMes[0]); mom=` O pico foi em <b>${MESNOME[pico.mi]}</b> (${pico.v}).`;}
+  }
+  const canal=groupCount(con,r=>canalCurto(r.canal||r.canalRec))[0];
+  const uf=groupCount(con,r=>(r.uf||'').trim())[0];
+  const seg=groupCount(con,r=>assuntoCurto(r.assunto)).filter(d=>d.k!=='—')[0];
+  const prob=groupCount(con,r=>{const p=(r.problema||'').trim();return(!p||p==='RECUSADO')?'':probCurto(p);})[0];
+  const nm=notaMedia(con);
+  // insights extras
+  const segStats = seg ? subsetStats(con.filter(r=>assuntoCurto(r.assunto)===seg.k)) : null;
+  let alerta='';
+  if(m.pctDentro<100 && m.tmesN) alerta=`<p>⚠️ <b>${m.tmesN-m.dentro}</b> reclamação(ões) encerrada(s) ultrapassaram o prazo de 15 dias — atenção ao SLA.</p>`;
+  else if(m.tmesN) alerta=`<p>✅ Todas as ${m.tmesN} reclamações encerradas saíram dentro do prazo de 15 dias.</p>`;
+  return `<div class="story"><h3><span>📊</span> O que os dados dizem ${periodo}</h3>
+    <p>A Ouvidoria conheceu <b>${m.conhecidas}</b> reclamações${mom}, além de <b>${m.rec}</b> recusada(s). ${canal?`O canal <span class="hl">${esc(canal.k)}</span> concentra <b>${pf(canal.v/m.conhecidas*100,0)}%</b> das entradas`:''}${uf?` e <b>${esc(uf.k)}</b> é o estado com mais ocorrências (${uf.v})`:''}.</p>
+    <p>${seg?`O segmento que mais reclama é <span class="hl">${esc(seg.k)}</span>, com <b>${seg.v}</b> casos (${pf(seg.v/m.conhecidas*100,0)}% do total)${segStats&&segStats.topProb?`, puxado pelo motivo <b>${esc(probCurto(segStats.topProb.k))}</b>`:''}.`:''} ${prob?`No geral, o motivo predominante é <b>${esc(prob.k)}</b> (${prob.v} casos).`:''}</p>
+    <p>A taxa de procedência ficou em <b>${pf(m.taxaProc,1)}%</b> (${m.proc} procedentes em ${m.analisadas} analisadas), com TME médio de <b>${pf(m.tmeMedia,1)} dias</b>. ${nm.n?`A satisfação média no Consumidor.gov foi <b>${pf(nm.media,2)}/5</b> (${nm.n} avaliações).`:'Ainda sem avaliações de satisfação no período.'}</p>
+    ${alerta}
+  </div>`;
+}
+
+function renderDiagnostico(rows){
+  const con=conhecidasDe(rows);
+  const totalGeral=con.length||1;
+  const segs=groupCount(con,r=>assuntoCurto(r.assunto)).filter(d=>d.k!=='—').slice(0,3);
+  const ramos=groupCount(con,r=>ramoLimpo(r.ramo)).slice(0,3);
+  const segCards=segs.length?segs.map((s,i)=>drillCard(i+1,s.k,con.filter(r=>assuntoCurto(r.assunto)===s.k),totalGeral)).join(''):'<div class="empty">Sem segmentos para o filtro atual.</div>';
+  const ramoCards=ramos.length?ramos.map((s,i)=>drillCard(i+1,s.k,con.filter(r=>ramoLimpo(r.ramo)===s.k),totalGeral)).join(''):'<div class="empty">Sem ramos para o filtro atual.</div>';
+  // matriz causa-raiz: top problemas x top 3 segmentos
+  const html=`
+  ${narrativa(rows)}
+  <div class="secttl"><span class="ic">▣</span> Segmentos com mais reclamações <span class="tag">drill-down automático · top 3</span></div>
+  <div class="grid g3">${segCards}</div>
+  <div class="secttl"><span class="ic">▤</span> Ramos com mais reclamações <span class="tag">drill-down automático · top 3</span></div>
+  <div class="grid g3">${ramoCards}</div>`;
+  document.getElementById('sec-diag').innerHTML=html;
+}
+
+/* ---------- renders ---------- */
+function renderTicker(){
+  const m=metrics(BASE);
+  const items=[
+    ['Entradas (conhecidas)',nf(m.conhecidas)],['Recusadas',nf(m.rec)],['Encerradas',nf(m.enc)],['Em aberto',nf(m.emAberto)],
+    ['Taxa de procedência',pf(m.taxaProc)+'%'],['Repiques (acum.)',nf(REP_ATUAL.length)],
+    ['Notificações extrajudiciais',nf(NOTIF_TOTAL)],['Satisfação média',pf(m.satMedia,2)+'/5'],['SLA dentro do prazo',pf(m.pctDentro,0)+'%']
+  ];
+  const one=items.map(i=>`<span class="tk-it"><span class="tk-dot"></span>${i[0]} <b>${i[1]}</b></span>`).join('');
+  document.getElementById('ticker').innerHTML=one+one;
+}
+
+function kpi(lbl,val,sub,accent){
+  return `<div class="kpi ${accent?'accent':''}"><div class="lbl">${lbl}</div><div class="val">${val}</div>${sub?`<div class="sub">${sub}</div>`:''}</div>`;
+}
+
+function renderSplash(){
+  const m=metrics(BASE);
+  const rep=REP_ATUAL.length;
+  const sat=m.satMedia;
+  const html=`
+  <div class="sp-inner">
+    <div class="cover-badge">RELATÓRIO DE OUVIDORIA</div>
+    <h1 class="cover-title">Akad <span>Seguros</span></h1>
+    <p class="cover-sub">Painel interativo da Ouvidoria · ${MESES[MES_MIN]}–${MESES[MES_MAX]} de ${REP_ANO||2026}</p>
+    <div class="cover-kpis">
+      <div class="cover-kpi"><div class="ck-val">${nf(m.conhecidas)}</div><div class="ck-lbl">Entradas conhecidas</div></div>
+      <div class="cover-kpi"><div class="ck-val">${nf(m.enc)}</div><div class="ck-lbl">Encerradas</div></div>
+      <div class="cover-kpi"><div class="ck-val">${pf(m.taxaProc,1)}%</div><div class="ck-lbl">Taxa de procedência</div></div>
+      <div class="cover-kpi"><div class="ck-val">${nf(rep)}</div><div class="ck-lbl">Repiques</div></div>
+      <div class="cover-kpi"><div class="ck-val">${sat?pf(sat,2):'—'}</div><div class="ck-lbl">Satisfação média /5</div></div>
+    </div>
+    <button class="sp-enter" onclick="enterDash('exec')">Ver relatório &nbsp;→</button>
+    <div class="cover-nav">
+      <button class="ghost" onclick="enterDash('diag')">🔎 Diagnóstico</button>
+      <button class="ghost" onclick="enterDash('entradas')">📥 Entradas</button>
+      <button class="ghost" onclick="enterDash('encerradas')">✅ Encerradas</button>
+      <button class="ghost" onclick="enterDash('mapa')">🗺️ Mapa do Brasil</button>
+    </div>
+    <p class="cover-foot">Este painel consolida as reclamações registradas na Ouvidoria da Akad Seguros no período, com a análise de entradas, encerramentos, classificação de procedência, repiques e satisfação. <b>Entradas</b> seguem a definição do relatório oficial (reclamações conhecidas, excluindo recusadas).</p>
+  </div>`;
+  document.getElementById('splash').innerHTML=html;
+}
+function enterDash(t){
+  document.getElementById('splash').style.display='none';
+  if(t){activeTab=t;showTab();}
+  window.scrollTo(0,0);
+}
+
+function renderExec(rows){
+  const m=metrics(rows);
+  const classSegs=[
+    {label:'Improcedente',v:m.improc,color:COR.mag},
+    {label:'Pendente',v:m.pend,color:COR.navy},
+    {label:'Procedente',v:m.proc,color:COR.mag2}
+  ];
+  const evol=[1,2,3,4,5,6].map(mi=>({k:MESES[mi],v:conhecidasDe(rows.filter(r=>r.mes===mi)).length}));
+  const html=`
+  <div class="grid g4 mb12">
+    ${kpi('📥 Entradas (conhecidas)',nf(m.conhecidas),m.rec+' recusadas · '+m.emAberto+' em aberto',true)}
+    ${kpi('✅ Taxa de encerramento',pf(m.taxaEnc)+'%',m.enc+' encerradas')}
+    ${kpi('⚖️ Taxa de procedência',pf(m.taxaProc)+'%',m.proc+' proc. · '+m.improc+' improc.')}
+    ${kpi('⭐ Satisfação (Gov)',pf(m.satMedia,2)+'<span style="font-size:14px;color:#8089a0">/5</span>',m.notasN+' avaliadas')}
+  </div>
+  <div class="grid g2 mb12">
+    <div class="card"><h3><span class="ic">▣</span> Funil de resolução</h3>
+      <div class="hbar">
+        <div class="row"><div class="lab">Entradas</div><div class="track"><div class="fill navy" style="width:100%">${m.conhecidas}</div></div></div>
+        <div class="row"><div class="lab">Encerradas</div><div class="track"><div class="fill" style="width:${m.conhecidas?m.enc/m.conhecidas*100:0}%">${m.enc}</div></div></div>
+        <div class="row"><div class="lab">Analisadas</div><div class="track"><div class="fill soft" style="width:${m.conhecidas?m.analisadas/m.conhecidas*100:0}%">${m.analisadas}</div></div></div>
+        <div class="row"><div class="lab">Procedentes</div><div class="track"><div class="fill soft" style="width:${m.conhecidas?m.proc/m.conhecidas*100:0}%">${m.proc}</div></div></div>
+      </div>
+      <div class="mt12" style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="pill p-improc">Improcedente ${m.improc}</span>
+        <span class="pill p-proc">Procedente ${m.proc}</span>
+        <span class="pill p-pend">Pendente ${m.pend}</span>
+        <span class="pill p-rec">Recusada ${m.rec} (fora das entradas)</span>
+      </div>
+    </div>
+    <div class="card"><h3><span class="ic">◔</span> Classificação das entradas</h3>
+      <div style="display:flex;align-items:center;gap:18px">${donut(classSegs,m.conhecidas,'conhecidas')}${legendOf(classSegs,m.conhecidas)}</div>
+    </div>
+  </div>
+  <div class="grid g2">
+    <div class="card"><h3><span class="ic">▦</span> SLA — prazo de resposta (15 dias)</h3>
+      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+        ${gauge(m.pctDentro,'dentro do prazo')}
+        <div style="font-size:13px;color:var(--ink);line-height:2">
+          <div><b style="font-size:18px;color:var(--navy)">${pf(m.tmeMedia,1)}</b> dias — tempo médio</div>
+          <div>${m.dentro} de ${m.tmesN} encerradas no prazo</div>
+          <div style="color:var(--muted2)">Prazo regulatório: 15 dias corridos</div>
+        </div>
+      </div>
+    </div>
+    <div class="card"><h3><span class="ic">▤</span> Evolução de entradas por mês</h3>${vbars(evol)}</div>
+  </div>`;
+  document.getElementById('sec-exec').innerHTML=html;
+}
+
+function renderEntradas(rows){
+  const m=metrics(rows);
+  const con=conhecidasDe(rows);
+  const uf=groupCount(con,r=>(r.uf||'').trim());
+  const canal=groupCount(con,r=>canalCurto(r.canalRec||r.canal));
+  const canalOrigem=groupCount(con,r=>canalTipo(r.canal));
+  const recl=groupCount(con,r=>reclCurto(r.recl));
+  const html=`
+  <div class="grid g4 mb12">
+    ${kpi('Entradas',nf(m.conhecidas),'conhecidas (exclui recusadas)',true)}
+    ${kpi('Desviados','—','sem registro')}
+    ${kpi('Recusadas',nf(m.rec),'não conhecidas')}
+    ${kpi('Em aberto',nf(m.emAberto),'aguardando decisão')}
+  </div>
+  <div class="grid g2 mb12">
+    <div class="card"><h3><span class="ic">▤</span> Entradas por UF</h3>${hbar(uf,{limit:12})}</div>
+    <div class="card"><h3><span class="ic">◌</span> Canal de reclamação</h3>${hbar(canal,{cls:'navy'})}
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Origem (direto × indireto)</div>
+      ${hbar(canalOrigem,{cls:'soft'})}
+    </div>
+  </div>
+  <div class="grid g2">
+    <div class="card"><h3><span class="ic">☺</span> Tipo de reclamante</h3>${hbar(recl,{cls:'soft'})}</div>
+    <div class="card"><h3><span class="ic">◈</span> Mapa de reclamações</h3>${bubbleMap(uf)}</div>
+  </div>`;
+  document.getElementById('sec-entradas').innerHTML=html;
+}
+
+function renderEncerradas(rows){
+  const enc=conhecidasDe(rows).filter(isEncerrada);
+  const m=metrics(rows);
+  const ramo=groupCount(enc,r=>ramoLimpo(r.ramo));
+  const assunto=groupCount(enc,r=>{const a=(r.assunto||'').trim();return(!a||a==='RECUSADO')?'':assuntoCurto(a);});
+  const problema=groupCount(enc,r=>{const p=(r.problema||'').trim();return(!p||p==='RECUSADO')?'':probCurto(p);});
+  const encImpr=enc.filter(r=>classOf(r.status)==='Improcedente').length;
+  const encProc=enc.filter(r=>classOf(r.status)==='Procedente').length;
+  const encPend=enc.filter(r=>classOf(r.status)==='Pendente').length;
+  const classSegs=[{label:'Improcedente',v:encImpr,color:COR.mag},{label:'Procedente',v:encProc,color:COR.mag2},{label:'Pendente',v:encPend,color:COR.navy}];
+  const tmes=enc.map(r=>r.tme).filter(t=>t>=0);
+  const faixas=[
+    {k:'Até 5d',v:tmes.filter(t=>t<=5).length},
+    {k:'5–10d',v:tmes.filter(t=>t>5&&t<=10).length},
+    {k:'10–15d',v:tmes.filter(t=>t>10&&t<=15).length},
+    {k:'+15d',v:tmes.filter(t=>t>15).length}
+  ];
+  const html=`
+  <div class="grid g4 mb12">
+    ${kpi('Encerradas',nf(m.enc),'com data de encerramento',true)}
+    ${kpi('Recusadas',nf(m.rec),'não conhecidas')}
+    ${kpi('TME médio',pf(m.tmeMedia,1)+' d','prazo de encerramento')}
+    ${kpi('SLA no prazo',pf(m.pctDentro,0)+'%','até 15 dias')}
+  </div>
+  <div class="grid g2 mb12">
+    <div class="card"><h3><span class="ic">◔</span> Classificação (procedência)</h3><div style="display:flex;align-items:center;gap:18px">${donut(classSegs,enc.length,'encerradas')}${legendOf(classSegs,enc.length)}</div></div>
+    <div class="card"><h3><span class="ic">▤</span> Ramo</h3>${hbar(ramo,{limit:8})}</div>
+  </div>
+  <div class="grid g2 mb12">
+    <div class="card"><h3><span class="ic">▣</span> Assunto (segmento SUSEP)</h3>${hbar(assunto,{cls:'navy',limit:8})}</div>
+    <div class="card"><h3><span class="ic">◇</span> Problema / motivo</h3>${hbar(problema,{cls:'soft',limit:8})}</div>
+  </div>
+  <div class="grid g2">
+    <div class="card"><h3><span class="ic">◷</span> TME — faixas de prazo</h3>${vbars(faixas)}</div>
+    <div class="card"><h3><span class="ic">⭐</span> Nota Gov</h3>
+      <div style="display:flex;align-items:center;gap:18px">
+        <div style="text-align:center"><div style="font-size:38px;font-weight:700;color:var(--mag);line-height:1">${pf(m.satMedia,2)}</div><div style="font-size:12px;color:var(--muted2)">média /5</div></div>
+        <div style="font-size:13px;color:var(--ink);line-height:2"><div>${m.notasN} reclamações avaliadas</div><div style="color:var(--muted2)">demais aguardando avaliação do consumidor</div></div>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('sec-encerradas').innerHTML=html;
+}
+
+function renderEncClass(rows){
+  const enc=conhecidasDe(rows).filter(isEncerrada);
+  const m=metrics(rows);
+  const improc=enc.filter(r=>classOf(r.status)==='Improcedente');
+  const proc=enc.filter(r=>classOf(r.status)==='Procedente');
+  const pend=enc.filter(r=>classOf(r.status)==='Pendente');
+  const bySeg=arr=>groupCount(arr,r=>{const a=(r.assunto||'').trim();return(!a||a==='RECUSADO')?'(sem segmento)':assuntoCurto(a);});
+  const classSegs=[
+    {label:'Procedente',v:proc.length,color:COR.navy},
+    {label:'Improcedente',v:improc.length,color:COR.mag},
+    {label:'Pendente de decisão',v:pend.length,color:COR.gray}
+  ];
+  const html=`
+  <div class="grid g3 mb12">
+    ${kpi('Encerradas',nf(enc.length),'com data de encerramento',true)}
+    ${kpi('Desviados','—','sem registro')}
+    ${kpi('Recusados',nf(m.rec),'não conhecidas')}
+  </div>
+  <div class="grid g2 mb12">
+    <div class="card"><h3><span class="ic">◔</span> Classificação</h3><div style="display:flex;align-items:center;gap:18px">${donut(classSegs,enc.length,'encerradas')}${legendOf(classSegs,enc.length)}</div></div>
+    <div class="card"><h3><span class="ic">▤</span> Improcedentes <span class="tag">${improc.length}</span></h3>${barsByCount(bySeg(improc))}</div>
+  </div>
+  <div class="grid g2">
+    <div class="card"><h3><span class="ic">▤</span> Pendente de decisão <span class="tag">${pend.length}</span></h3>${barsByCount(bySeg(pend),{cls:'gray'})}</div>
+    <div class="card"><h3><span class="ic">▤</span> Procedentes <span class="tag">${proc.length}</span></h3>${barsByCount(bySeg(proc),{cls:'navy'})}</div>
+  </div>
+  <p class="note-p mt12" style="color:var(--muted2)">Considera apenas reclamações <b>encerradas</b> (com data de encerramento), agrupadas por classificação e, dentro de cada uma, pelo segmento SUSEP. Responde aos filtros do topo.</p>`;
+  document.getElementById('sec-encclass').innerHTML=html;
+}
+
+function renderClass(rows){
+  const m=metrics(rows);
+  const proc=conhecidasDe(rows).filter(r=>classOf(r.status)==='Procedente');
+  const seg=groupCount(proc,r=>{const a=(r.assunto||'').trim();return(!a||a==='RECUSADO')?'(sem segmento)':assuntoCurto(a);});
+  const ramo=groupCount(proc,r=>ramoLimpo(r.ramo)||'(sem ramo)');
+  const prob=groupCount(proc,r=>{const p=(r.problema||'').trim();return(!p||p==='RECUSADO')?'(sem motivo)':probCurto(p);});
+  const tmes=proc.map(r=>r.tme).filter(t=>t>=0);
+  const tmeMed=tmes.length?tmes.reduce((a,b)=>a+b,0)/tmes.length:0;
+  const html=`
+  <div class="grid g4 mb12">
+    ${kpi('Procedentes',nf(proc.length),proc.length+' de '+m.analisadas+' analisadas · '+pf(m.taxaProc,1)+'%',true)}
+    ${kpi('TME médio',tmes.length?pf(tmeMed,1)+' d':'—','das procedentes')}
+    ${kpi('Improcedentes',nf(m.improc),'para comparação')}
+    ${kpi('Recusadas',nf(m.rec),'não conhecidas')}
+  </div>
+  <div class="grid g2 mb12">
+    <div class="card"><h3><span class="ic">▣</span> Segmento <span class="tag">${proc.length}</span></h3>${barsByCount(seg,{cls:'navy'})}</div>
+    <div class="card"><h3><span class="ic">▤</span> Ramo</h3>${barsByCount(ramo,{cls:'navy'})}</div>
+  </div>
+  <div class="card"><h3><span class="ic">◇</span> Problema / motivo</h3>${barsByCount(prob,{cls:'navy'})}</div>
+  <p class="note-p mt12" style="color:var(--muted2)">Painel dedicado às reclamações <b>procedentes</b> (conhecidas e julgadas procedentes), detalhadas por segmento, ramo e motivo. Responde aos filtros do topo.</p>`;
+  document.getElementById('sec-class').innerHTML=html;
+}
+
+function renderRepique(){
+  const RP=REP_ATUAL;
+  const total=RP.length;
+  const resolvido=RP.filter(r=>r.status.slice(0,8)==='RESOLVID').length;
+  const pendente=RP.filter(r=>r.status.indexOf('PENDENTE')===0).length;
+  const taxa=total?resolvido/total*100:0;
+  const pos=RP.filter(r=>r.posneg==='POSITIVA').length;
+  const neg=RP.filter(r=>r.posneg==='NEGATIVA').length;
+  const tipo=groupCount(RP,r=>r.tipo);
+  const porMes=[1,2,3,4,5,6,7,8,9,10,11,12].map(mi=>({k:MESES[mi],v:RP.filter(r=>r.mes===mi).length})).filter(d=>d.v>0);
+  const segs=[{label:'Negativa',v:neg,color:COR.mag},{label:'Positiva',v:pos,color:COR.mag2}];
+  const html=`
+  <div class="grid g4 mb12">
+    ${kpi('Total de repiques',nf(total),'acumulado do período',true)}
+    ${kpi('Resolvidos',nf(resolvido),pf(taxa)+'% de resolução')}
+    ${kpi('Pendentes',nf(pendente),'')}
+    ${kpi('Avaliação negativa',nf(neg),'de '+(pos+neg)+' avaliações')}
+  </div>
+  <div class="grid g2 mb12">
+    <div class="card"><h3><span class="ic">◷</span> Repiques por mês</h3>${vbars(porMes)}</div>
+    <div class="card"><h3><span class="ic">↻</span> Tipo de repique</h3>${hbar(tipo,{cls:'navy'})}</div>
+  </div>
+  <div class="card"><h3><span class="ic">◔</span> Avaliação (positiva × negativa)</h3><div style="display:flex;align-items:center;gap:18px">${donut(segs,pos+neg,'avaliados')}${legendOf(segs,pos+neg)}</div></div>`;
+  document.getElementById('sec-repique').innerHTML=html;
+}
+
+function renderAcum(){
+  const meses=[];
+  for(let mi=MES_MIN;mi<=MES_MAX;mi++) meses.push(mi);
+  const isRec=r=>classOf(r.status)==='Recusado';
+  // Entradas: por mês de abertura — conhecidas vs recusadas
+  const entradas=meses.map(mi=>({
+    k:MESES[mi],
+    a:BASE.filter(r=>r.mes===mi && !isRec(r)).length,
+    b:BASE.filter(r=>r.mes===mi && isRec(r)).length
+  }));
+  // Encerradas: por mês de ENCERRAMENTO — conhecidas encerradas vs recusadas encerradas
+  const encerradas=meses.map(mi=>({
+    k:MESES[mi],
+    a:BASE.filter(r=>r.tme>=0 && r.mesEnc===mi && !isRec(r)).length,
+    b:BASE.filter(r=>r.tme>=0 && r.mesEnc===mi && isRec(r)).length
+  }));
+  // Totais
+  const entTot=[{k:'Total',
+    a:BASE.filter(r=>!isRec(r)).length,
+    b:BASE.filter(r=>isRec(r)).length}];
+  const encTot=[{k:'Total',
+    a:BASE.filter(r=>r.tme>=0 && !isRec(r)).length,
+    b:BASE.filter(r=>r.tme>=0 && isRec(r)).length}];
+  const m=metrics(BASE);
+  const C=[COR.mag,COR.navy];
+  const html=`
+  <div class="grid g4 mb12">
+    ${kpi('Entradas no período',nf(m.conhecidas),'conhecidas · '+MESES[MES_MIN]+'–'+MESES[MES_MAX],true)}
+    ${kpi('Encerradas',nf(m.enc),'com data de encerramento')}
+    ${kpi('Recusadas',nf(m.rec),'')}
+    ${kpi('Notificações extrajud.',nf(NOTIF_TOTAL),'acumulado')}
+  </div>
+  <div class="grid mb12" style="grid-template-columns:3fr 1fr;gap:12px">
+    <div class="card"><h3><span class="ic">▤</span> Entradas por mês (abertura)</h3>${vbars2(entradas,{labels:['Entradas','Recusadas'],colors:C})}</div>
+    <div class="card"><h3><span class="ic">∑</span> Total</h3>${vbars2(entTot,{labels:['Entradas','Recusadas'],colors:C})}</div>
+  </div>
+  <div class="grid" style="grid-template-columns:3fr 1fr;gap:12px">
+    <div class="card"><h3><span class="ic">▤</span> Encerradas por mês (encerramento)</h3>${vbars2(encerradas,{labels:['Encerradas','Recusadas'],colors:C})}</div>
+    <div class="card"><h3><span class="ic">∑</span> Total</h3>${vbars2(encTot,{labels:['Encerradas','Recusadas'],colors:C})}</div>
+  </div>
+  <p class="note-p mt12" style="color:var(--muted2)">Visão acumulada — não responde aos filtros, sempre exibe o período completo. <b>Encerradas</b> são contadas pelo mês em que a reclamação foi efetivamente encerrada.</p>`;
+  document.getElementById('sec-acum').innerHTML=html;
+}
+
+function renderMapa(rows){
+  const uf=groupCount(conhecidasDe(rows),r=>(r.uf||'').trim());
+  const html=`
+  <div class="card">
+    <h3><span class="ic">◈</span> Distribuição geográfica das reclamações</h3>
+    <div class="mapwrap">
+      <div>${bubbleMap(uf)}</div>
+      <div>
+        <div style="font-size:12px;color:var(--muted2);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Ranking por UF</div>
+        ${hbar(uf,{limit:16})}
+      </div>
+    </div>
+    <p class="note-p mt12" style="color:var(--muted2)">Mapa nativo em SVG — substitui o visual de mapa do Power BI que está sendo descontinuado. O tamanho da bolha é proporcional ao volume de reclamações.</p>
+  </div>`;
+  document.getElementById('sec-mapa').innerHTML=html;
+}
+
+function renderMapeamento(){
+  const rows=MAPE.map(r=>`<tr><td>${esc(r.data)}</td><td>${esc(r.nome)}</td><td>${esc(canalCurto(r.canal))}</td><td>${esc(r.fato)}</td><td>${esc(r.resumo)}</td><td><span class="pill ${r.classif==='PROCEDENTE'?'p-proc':'p-improc'}">${esc(r.classif)}</span></td></tr>`).join('');
+  const html=`
+  <div class="card"><h3><span class="ic">▥</span> Mapeamento de oportunidades — ${MAPE.length} registros (2026)</h3>
+    <div class="tbwrap"><table class="tb"><thead><tr><th>Data</th><th>Reclamante</th><th>Canal</th><th>Fato gerador</th><th>Resumo / oportunidade</th><th>Classif.</th></tr></thead><tbody>${rows}</tbody></table></div>
+  </div>`;
+  document.getElementById('sec-mapeamento').innerHTML=html;
+}
+
+function renderNotas(){
+  const cl=NOTAS.classificacao.map(c=>{
+    const cls=c.k.indexOf('Procedente')===0?'p-proc':c.k.indexOf('Improcedente')===0?'p-improc':c.k.indexOf('Recusado')===0?'p-rec':'p-pend';
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span class="pill ${cls}" style="min-width:64px;text-align:center">${nf(c.v)}</span><span style="font-size:13.5px;color:var(--ink)">${esc(c.k)}</span></div>`;
+  }).join('');
+  const html=`
+  <div class="card"><h3><span class="ic">✎</span> ${esc(NOTAS.titulo)}</h3>
+    ${NOTAS.paragrafos.map(p=>`<p class="note-p">${esc(p)}</p>`).join('')}
+    <div class="mt12">${cl}</div>
+  </div>`;
+  document.getElementById('sec-notas').innerHTML=html;
+}
+
+function renderRec(){
+  if(!REC.length){document.getElementById('sec-rec').innerHTML='<div class="card"><div class="empty">Não há recomendações pendentes.</div></div>';return;}
+  const rows=REC.map(r=>`<tr><td>${esc(r.protocolo)}</td><td>${esc(r.acao)}</td><td>${esc(r.abertura)}</td><td>${esc(r.prazo)}</td><td><span class="pill p-pend">${esc(r.status)}</span></td></tr>`).join('');
+  const html=`
+  <div class="card"><h3><span class="ic">⚐</span> Recomendações pendentes de resposta — ${REC.length}</h3>
+    <div class="tbwrap"><table class="tb"><thead><tr><th>Protocolo</th><th>Ação sugerida</th><th>Abertura</th><th>Prazo</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>
+  </div>`;
+  document.getElementById('sec-rec').innerHTML=html;
+}
+
+/* ---------- orchestration ---------- */
+const TABS=[
+  ['exec','Visão executiva'],['diag','Diagnóstico'],['entradas','Entradas'],['encerradas','Encerradas'],['encclass','Encerr. Classificação'],['class','Class. Procedentes'],
+  ['repique','Repique'],['acum','Acumulado'],['mapa','Mapa do Brasil'],['mapeamento','Mapeamento'],['notas','Notas'],['rec','Recomendações']
+];
+let activeTab='exec';
+function gotoTab(t){activeTab=t;showTab();window.scrollTo(0,0);}
+function buildTabs(){
+  document.getElementById('tabs').innerHTML=TABS.map(t=>`<button class="tab${t[0]===activeTab?' active':''}" data-t="${t[0]}">${t[1]}</button>`).join('');
+  document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{activeTab=b.dataset.t;showTab();});
+}
+function showTab(){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.t===activeTab));
+  TABS.forEach(t=>document.getElementById('sec-'+t[0]).classList.toggle('active',t[0]===activeTab));
+}
+function renderAll(){
+  const f=applyFilters(BASE);
+  renderExec(f); renderDiagnostico(f); renderEntradas(f); renderEncerradas(f); renderEncClass(f); renderClass(f); renderMapa(f);
+  renderRepique(); renderAcum(); renderMapeamento(); renderNotas(); renderRec();
+  const active=[];
+  if(state.mesMin!==MES_MIN||state.mesMax!==MES_MAX)active.push(state.mesMin===state.mesMax?MESES[state.mesMin]:MESES[state.mesMin]+'–'+MESES[state.mesMax]);
+  if(state.canal!=='all')active.push(state.canal);
+  if(state.ouv==='sem')active.push('Sem recusadas');
+  if(state.ouv==='rec')active.push('Só recusadas');
+  const nCon=conhecidasDe(f).length, nRec=f.length-nCon;
+  document.getElementById('filterTag').textContent=active.length?('Filtrando: '+active.join(' · ')+' — '+nCon+' entradas'+(nRec?' + '+nRec+' recusadas':'')):'';
+}
+function updateRange(){
+  const rMin=document.getElementById('rMin'), rMax=document.getElementById('rMax');
+  let a=+rMin.value, b=+rMax.value;
+  if(a>b){const t=a;a=b;b=t;}
+  state.mesMin=a; state.mesMax=b;
+  // mantém o thumb arrastado por cima quando se cruzam
+  rMin.style.zIndex = (+rMin.value > MES_MAX-0.5) ? 5 : 3;
+  const span=(MES_MAX-MES_MIN)||1;
+  const lo=(a-MES_MIN)/span*100, hi=(b-MES_MIN)/span*100;
+  const fill=document.getElementById('rangeFill');
+  fill.style.left=lo+'%'; fill.style.right=(100-hi)+'%';
+  document.getElementById('rangeLabel').textContent = a===b?MESES[a]+'/26':MESES[a]+' – '+MESES[b]+'/26';
+  renderAll();
+}
+function fillSelects(){
+  const rMin=document.getElementById('rMin'), rMax=document.getElementById('rMax');
+  rMin.min=rMax.min=MES_MIN; rMin.max=rMax.max=MES_MAX;
+  rMin.value=state.mesMin; rMax.value=state.mesMax;
+  rMin.oninput=updateRange; rMax.oninput=updateRange;
+  const canais=[...new Set(BASE.map(r=>canalCurto(r.canal||r.canalRec)))].filter(Boolean).sort();
+  document.getElementById('fCanal').innerHTML=['<option value="all">Todos</option>'].concat(canais.map(c=>`<option>${esc(c)}</option>`)).join('');
+  document.getElementById('fOuv').innerHTML='<option value="sem">Sem recusadas</option><option value="todos">Todos</option><option value="rec">Recusados</option>';
+  document.getElementById('fOuv').value=state.ouv;
+  document.getElementById('fCanal').onchange=e=>{state.canal=e.target.value;renderAll();};
+  document.getElementById('fOuv').onchange=e=>{state.ouv=e.target.value;renderAll();};
+  document.getElementById('btnReset').onclick=()=>{
+    state={mesMin:MES_MIN,mesMax:MES_MAX,canal:'all',ouv:'todos'};
+    document.getElementById('fCanal').value='all';
+    document.getElementById('fOuv').value='todos';
+    rMin.value=MES_MIN; rMax.value=MES_MAX; updateRange();
+  };
+  updateRange();
+}
+renderTicker(); fillSelects(); buildTabs(); renderAll(); showTab(); renderSplash();
+</script>
+</body>
+</html>
